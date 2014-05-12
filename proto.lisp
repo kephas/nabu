@@ -15,3 +15,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>. |#
 
 (in-package :nothos.net/2014.05.nabu)
+
+(defclass manuscript ()
+  ((name :initarg :name :reader ms-name)
+   (glyphs :initarg :glyphs :accessor ms-glyphs))
+  (:default-initargs :glyphs nil))
+
+(defclass glyph ()
+  ((char :initarg :char :reader glyph-char)
+   (pos :initarg :pos :reader glyph-pos)
+   (image :initarg :img :reader glyph-img)))
+
+(defun split-image-name (name)
+  (bind (((:values _ regs) (scan-to-strings "c\\.(.)\\.p\\.([ivxlcm.0-9]*)" name)))
+    (bind ((#(char pos) regs))
+      (list char (split-sequence #\. pos)))))
+
+(defun read-images-dir (dirname &optional name)
+  (let ((name (if name name (pathname-name (pathname-as-file dirname)))))
+    (make-instance 'manuscript :name name
+		   :glyphs (mapcar (lambda (pathname)
+				     (bind (((char pos) (split-image-name (pathname-name pathname))))
+				       (make-instance 'glyph :img pathname :char char :pos pos)))
+				   (list-directory dirname)))))

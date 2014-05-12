@@ -14,5 +14,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. |#
 
-(defpackage :nothos.net/2014.05.nabu
-  (:use :common-lisp :alexandria :scheme :cl-fad :cl-ppcre :split-sequence :metabang-bind))
+(in-package :nothos.net/2014.05.nabu)
+
+(defmethod print-object ((object manuscript) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (princ (ms-name object) stream)))
+
+(defmethod print-object ((object glyph) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (format stream "~a ~a" (glyph-char object) (glyph-pos object))))

@@ -85,3 +85,23 @@
 	 (:h1 "New table")
 	 (let ((url (format nil "/tbl?name=~a" (tbl-name table))))
 	   (htm (:a :href url (str (tbl-name table)))))))))))
+
+(define-easy-handler (baaad-img :uri "/img") (path)
+  (handle-static-file path))
+
+(define-easy-handler  (show-table :uri "/tbl") (name)
+  (if-let (table (gethash name *tables*))
+    (progn
+      (nabu-page (tbl-name table)
+	(:table
+	 (maphash (lambda (char images)
+		    (htm (:tr
+			  (:td (str char))
+			  (:td
+			   (dolist (img images)
+			     (let ((url (format nil "/img?path=~a" img)))
+			       (htm (:img :src url))))))))
+		  (tbl-ab table)))))
+    (progn
+      (setf (return-code*) +http-not-found+)
+      (nabu-page "Table not found"))))

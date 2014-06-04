@@ -18,20 +18,54 @@
 
 (defparameter *manuscripts* (list *ms-1908*))
 
-(define-easy-handler (show-mss :uri "/mss") ()
-  (with-html-output-to-string (out)
-    (htm 
+
+(define-easy-handler (bootstrap-css :uri "/bootstrap.min.css") ()
+  (handle-static-file "/home/pierre/Development/nabu/bootstrap.min.css"))
+
+(define-easy-handler (bootstrap-js :uri "/bootstrap.min.js") ()
+  (handle-static-file "/home/pierre/Development/nabu/bootstrap.min.js"))
+
+(defmacro nabu-page (title &body body)
+  `(with-html-output-to-string (out)
      (:html
       (:head
-       (:title "NABU - Manuscripts"))
+       (:title (fmt "NABU - ~a" ,title))
+       (:link :href "/bootstrap.min.css" :rel "stylesheet")
+       (:style :type "text/css" "body {margin: 4em 2em;}"))
       (:body
-       (:h1 "Manuscripts")
-       (:form :method "GET" :action "/mss2tbl"
-	      (dolist (ms *manuscripts*)
-		(htm
-		 (:p (:input :type "checkbox" :name (ms-name ms) (str (ms-name ms))))))
-	      (:p (:input :name "--NAME"))
-	      (:input :type "submit" :value "Create table")))))))
+       ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
+	((:div :class "container")
+	 ((:div :class "navbar-header")
+	  ((:a :class "navbar-brand" :href "#") "NABU"))
+	 ((:div :class "collapse navbar-collapse")
+	  ((:ul :class "nav navbar-nav")
+	   (:li (:a :href "/mss" "Manuscripts"))
+	   (:li (:a :href "/tables" "Tables"))))))
+       ((:div :class "container")
+	(:h1 (str ,title))
+	,@body
+	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
+	(:script :src "/bootstrap.min.js"))))))
+
+(define-easy-handler (show-mss :uri "/mss") ()
+  (nabu-page "Manuscripts"
+    (:form :method "GET" :action "/mss2tbl"
+	   (dolist (ms *manuscripts*)
+	     (htm
+	      (:p (:input :type "checkbox" :name (ms-name ms) (str (ms-name ms))))))
+	   (:p (:input :name "--NAME"))
+	   (:input :type "submit" :value "Create table"))))
+
+
+(defparameter *tables* (make-hash-table :test 'equal))
+
+(define-easy-handler (show-tables :uri "/tables") ()
+  (nabu-page "Tables"
+    (:ul
+     (maphash-keys (lambda (name)
+		     (let ((url (format nil "/tbl?name=~a" name)))
+		       (htm (:li (:a :href url (str name))))))
+		   *tables*))))
 
 (define-easy-handler (mss2tbl :uri "/mss2tbl") ()
   (let ((table (make-table (get-parameter "--NAME")

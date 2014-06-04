@@ -93,6 +93,8 @@
   (if-let (table (gethash name *tables*))
     (progn
       (nabu-page (tbl-name table)
+	(let ((url (format nil "/edit-tbl?name=~a" name)))
+	  (htm (:p (:a :href url "Edit"))))
 	(:table
 	 (maphash (lambda (char images)
 		    (htm (:tr
@@ -105,3 +107,18 @@
     (progn
       (setf (return-code*) +http-not-found+)
       (nabu-page "Table not found"))))
+
+(define-easy-handler (new-table :uri "/new-tbl") ()
+  (let ((ab (make-hash-table :test 'equal)))
+    (dolist (param (post-parameters*))
+      (when (equal (cdr param) "on")
+	(bind (((:values _ regs) (scan-to-strings "(.):(.*)" (car param)))
+	       (#(char path) regs))
+	  (push path (gethash char ab)))))
+    (let ((table (make-instance 'table
+				:name (post-parameter "--NAME")
+				:ab ab)))
+      (setf (gethash (tbl-name table) *tables*) table)
+      (nabu-page "New table"
+	(let ((url (format nil "/tbl?name=~a" (tbl-name table))))
+	  (htm (:p (:a :href url (str (tbl-name table))))))))))

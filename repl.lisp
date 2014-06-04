@@ -24,6 +24,6 @@
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "~a ~a" (glyph-char object) (glyph-pos object))))
 
-(defmethod print-object ((object manuscript) stream)
+(defmethod print-object ((object table) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (princ (tbl-name object) stream)))

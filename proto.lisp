@@ -38,3 +38,9 @@
 				     (bind (((char pos) (split-image-name (pathname-name pathname))))
 				       (make-instance 'glyph :img pathname :char char :pos pos)))
 				   (list-directory dirname)))))
+
+(defun make-table (&rest mss)
+  (let ((table (make-hash-table :test 'equal)))
+    (dolist (ms mss table)
+      (dolist (glyph (ms-glyphs ms))
+	(push (glyph-img glyph) (gethash (glyph-char glyph) table))))))

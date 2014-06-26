@@ -16,7 +16,7 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-(defparameter *manuscripts* (list *ms-1908*))
+(defvar *manuscripts* nil)
 
 
 (define-easy-handler (bootstrap-css :uri "/bootstrap.min.css") ()
@@ -77,7 +77,7 @@
 					   (get-parameters*))))))
     (setf (gethash (tbl-name table) *tables*) table)
     (with-html-output-to-string (out)
-      (who:htm
+      (htm
        (:html
 	(:head
 	 (:title "NABU - New table"))

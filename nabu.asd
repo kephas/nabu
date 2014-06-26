@@ -8,6 +8,8 @@
   :version "0.1"
   :author "Pierre Thierry <pierre@nothos.net>"
   :licence "AGPL"
-  :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence")
-  :components ((:file "package"))
+  :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "hunchentoot")
+  :components ((:file "package")
+	       (:file "proto")
+	       (:file "web"))
   :serial t)

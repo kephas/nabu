@@ -34,10 +34,15 @@
 (defun read-images-dir (dirname &optional name)
   (let ((name (if name name (pathname-name (pathname-as-file dirname)))))
     (make-instance 'manuscript :name name
-		   :glyphs (mapcar (lambda (pathname)
-				     (bind (((char pos) (split-image-name (pathname-name pathname))))
-				       (make-instance 'glyph :img pathname :char char :pos pos)))
+		   :glyphs (mapcan (lambda (pathname)
+				     (handler-case
+					 (bind (((char pos) (split-image-name (pathname-name pathname))))
+					   (list (make-instance 'glyph :img `(:file ,pathname) :char char :pos pos)))
+				       (error ()
+					 nil)))
 				   (list-directory dirname)))))
+
+
 
 (defclass table ()
   ((name :initarg :name :reader tbl-name)
@@ -48,4 +53,4 @@
 		 :ab (let ((table (make-hash-table :test 'equal)))
 		       (dolist (ms mss table)
 			 (dolist (glyph (ms-glyphs ms))
-			   (push (glyph-img glyph) (gethash (glyph-char glyph) table)))))))
+			   (push (glyph-url glyph) (gethash (glyph-char glyph) table)))))))

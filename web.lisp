@@ -86,6 +86,12 @@
 	 (let ((url (format nil "/tbl?name=~a" (tbl-name table))))
 	   (htm (:a :href url (str (tbl-name table)))))))))))
 
+(defun glyph-url (glyph)
+  (bind (((kind datum) (glyph-img glyph)))
+    (case kind
+      (:file (format nil "/img?path=~a" datum))
+      (:uri datum))))
+
 (define-easy-handler (baaad-img :uri "/img") (path)
   (handle-static-file path))
 
@@ -101,8 +107,7 @@
 			  (:td (str char))
 			  (:td
 			   (dolist (img images)
-			     (let ((url (format nil "/img?path=~a" img)))
-			       (htm (:img :src url))))))))
+			     (htm (:img :src img)))))))
 		  (tbl-ab table)))))
     (progn
       (setf (return-code*) +http-not-found+)

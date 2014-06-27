@@ -16,4 +16,4 @@
 
 (defpackage :nothos.net/2014.05.nabu
   (:use :common-lisp :alexandria :scheme :cl-ppcre :split-sequence :metabang-bind :who :hunchentoot)
-  (:shadowing-import-from :cl-fad))
+  (:import-from :cl-fad #:pathname-as-file #:list-directory))

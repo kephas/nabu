@@ -54,8 +54,18 @@
 	     (htm
 	      (:p (:input :type "checkbox" :name (ms-name ms) (str (ms-name ms))))))
 	   (:p (:input :name "--NAME"))
-	   (:input :type "submit" :value "Create table"))))
+	   (:input :type "submit" :value "Create table"))
+    (:hr)
+    (:h2 "Add manuscript")
+    ((:form :method "GET" :action "/addms")
+     (:p "URI " (:input :name "uri"))
+     (:input :type "submit" :value "Add"))))
 
+(define-easy-handler (add-ms :uri "/addms") (uri)
+  (let ((new (read-images-manifest uri))) body...)
+    (push new *manuscripts*)
+    (nabu-page "Manuscript added"
+      (:p (str (ms-name new))))))
 
 (defparameter *tables* (make-hash-table :test 'equal))
 

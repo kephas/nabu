@@ -86,15 +86,9 @@
 					     (if (equal "on" (cdr param)) (list (car param))))
 					   (get-parameters*))))))
     (setf (gethash (tbl-name table) *tables*) table)
-    (with-html-output-to-string (out)
-      (htm
-       (:html
-	(:head
-	 (:title "NABU - New table"))
-	(:body
-	 (:h1 "New table")
-	 (let ((url (format nil "/tbl?name=~a" (tbl-name table))))
-	   (htm (:a :href url (str (tbl-name table)))))))))))
+    (nabu-page "New table"
+      (let ((url (format nil "/tbl?name=~a" (tbl-name table))))
+	(htm (:a :href url (str (tbl-name table))))))))
 
 (defun glyph-url (glyph)
   (bind (((kind datum) (glyph-img glyph)))

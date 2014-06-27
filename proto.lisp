@@ -42,7 +42,20 @@
 					 nil)))
 				   (list-directory dirname)))))
 
-
+(defun read-images-manifest (uri)
+  (with-input-from-string (manifest (drakma:http-request uri))
+    (let@ rec ((name (read manifest))
+	       (spec (read manifest nil))
+	       (glyphs))
+      (if spec
+	  (rec name
+	       (read manifest nil)
+	       (cons (make-instance 'glyph
+				    :img `(:uri ,(puri:merge-uris (car spec) uri))
+				    :char (cadr spec)
+				    :pos (cddr spec))
+		     glyphs))
+	  (make-instance 'manuscript :name name :glyphs (reverse glyphs))))))
 
 (defclass table ()
   ((name :initarg :name :reader tbl-name)

@@ -30,22 +30,6 @@
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)))
 
-(defun split-image-name (name)
-  (bind (((:values _ regs) (scan-to-strings "c\\.(.)\\.p\\.([ivxlcm.0-9]*)" name)))
-    (bind ((#(char pos) regs))
-      (list char (split-sequence #\. pos)))))
-
-(defun read-images-dir (dirname &optional name)
-  (let ((name (if name name (pathname-name (pathname-as-file dirname)))))
-    (make-instance 'manuscript :name name
-		   :glyphs (mapcan (lambda (pathname)
-				     (handler-case
-					 (bind (((char pos) (split-image-name (pathname-name pathname))))
-					   (list (make-instance 'glyph :img `(:file ,pathname) :char char :pos pos)))
-				       (error ()
-					 nil)))
-				   (list-directory dirname)))))
-
 (defun read-images-manifest (uri)
   (with-input-from-string (manifest (drakma:http-request uri))
     (let ((description (read manifest)))

@@ -10,6 +10,6 @@
   :licence "AGPL"
   :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "hunchentoot" "drakma")
   :components ((:file "package")
-	       (:file "proto")
+	       (:file "model")
 	       (:file "web"))
   :serial t)

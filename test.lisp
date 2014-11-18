@@ -37,3 +37,10 @@
     (is (nabu::range-overlap? '(1 4) range)))
   (dolist (range '((-1 0) (6 7)))
     (is (not (nabu::range-overlap? '(1 4) range)))))
+
+(deftest date-check ()
+  (let ((date-check (nabu::make-dates 1 4 (5 6))))
+    (dolist (good '(1 4 (0 3) (0 4) (3 5) nil))
+      (is (funcall date-check good)))
+    (dolist (bad '(0 3 7 (-1 0) (2 3) (7 8)))
+      (is (not (funcall date-check bad))))))

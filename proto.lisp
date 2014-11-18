@@ -18,7 +18,11 @@
 
 (defclass manuscript ()
   ((name :initarg :name :reader ms-name)
-   (glyphs :initarg :glyphs :accessor ms-glyphs))
+   (glyphs :initarg :glyphs :accessor ms-glyphs)
+   (years :initarg :years :accessor ms-years)
+   (material :initarg :mat :accessor ms-mat)
+   (ligature :initarg :lig :accessor ms-lig)
+   (place :initarg :place :accessor ms-place))
   (:default-initargs :glyphs nil))
 
 (defclass glyph ()

@@ -18,7 +18,7 @@
 
 (defmethod print-object ((object manuscript) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (princ (ms-name object) stream)))
+    (format stream "~a ~a,~a" (ms-name object) (ms-place object) (ms-years object))))
 
 (defmethod print-object ((object glyph) stream)
   (print-unreadable-object (object stream :type t :identity t)

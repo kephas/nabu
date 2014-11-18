@@ -62,7 +62,7 @@
      (:input :type "submit" :value "Add"))))
 
 (define-easy-handler (add-ms :uri "/addms") (uri)
-  (let ((new (read-images-manifest uri))) body...)
+  (let ((new (read-images-manifest uri)))
     (push new *manuscripts*)
     (nabu-page "Manuscript added"
       (:p (str (ms-name new))))))

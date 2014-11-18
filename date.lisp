@@ -16,10 +16,6 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-#| A year-spec is either a natural integer for a specific year or a
-   list of two natural integers for a range of years (including its
-   limits) |#
-
 (defun within? (number range)
   (and (>= number (first range)) (<= number (second range))))
 
@@ -29,23 +25,31 @@
       (and (>= (second range2) (first range1))
 	   (<= (first range2) (second range1)))))
 
+#| A year-spec is either a natural integer for a specific year or a
+   list of two natural integers for a range of years (including its
+   limits).
+
+   In a MS object, it can also be NIL, in which case it satisfies any
+   comparison to another year-spec. |#
+
 (defun %make-date-checker (my-year-specs)
   (lambda (&rest their-year-specs)
     (let@ rec-y ((year-specs their-year-specs))
       (when year-specs
 	(let ((year-spec (first year-specs)))
-	  (let@ rec-c ((candidates my-year-specs))
-	    (if candidates
-		(let ((candidate (first candidates))
-		      (next (rest candidates)))
-		  (if (integerp year-spec)
-		      (if (integerp candidate)
-			  (if (eql year-spec candidate) t (rec-c next))
-			  (if (within? year-spec candidate) t (rec-c next)))
-		      (if (integerp candidate)
-			  (if (within? candidate year-spec) t (rec-c next))
-			  (if (range-overlap? year-spec candidate) t (rec-c next)))))
-		(rec-y (rest year-specs)))))))))
+	  (if (null year-spec) t
+	      (let@ rec-c ((candidates my-year-specs))
+		(if candidates
+		    (let ((candidate (first candidates))
+			  (next (rest candidates)))
+		      (if (integerp year-spec)
+			  (if (integerp candidate)
+			      (if (eql year-spec candidate) t (rec-c next))
+			      (if (within? year-spec candidate) t (rec-c next)))
+			  (if (integerp candidate)
+			      (if (within? candidate year-spec) t (rec-c next))
+			      (if (range-overlap? year-spec candidate) t (rec-c next)))))
+		    (rec-y (rest year-specs))))))))))
 
 (defmacro make-dates (&body dates)
   `(%make-date-checker ',dates))

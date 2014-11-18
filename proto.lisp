@@ -23,7 +23,7 @@
    (material :initarg :mat :accessor ms-mat)
    (ligature :initarg :lig :accessor ms-lig)
    (place :initarg :place :accessor ms-place))
-  (:default-initargs :glyphs nil))
+  (:default-initargs :glyphs nil :years nil :mat nil :lig nil :place nil))
 
 (defclass glyph ()
   ((char :initarg :char :reader glyph-char)
@@ -48,18 +48,17 @@
 
 (defun read-images-manifest (uri)
   (with-input-from-string (manifest (drakma:http-request uri))
-    (let@ rec ((name (read manifest))
-	       (spec (read manifest nil))
-	       (glyphs))
-      (if spec
-	  (rec name
-	       (read manifest nil)
-	       (cons (make-instance 'glyph
-				    :img `(:uri ,(puri:merge-uris (car spec) uri))
-				    :char (cadr spec)
-				    :pos (cddr spec))
-		     glyphs))
-	  (make-instance 'manuscript :name name :glyphs (reverse glyphs))))))
+    (let ((description (read manifest)))
+      (let@ rec ((spec (read manifest nil))
+		 (glyphs))
+	(if spec
+	    (rec (read manifest nil)
+		 (cons (make-instance 'glyph
+				      :img `(:uri ,(puri:merge-uris (car spec) uri))
+				      :char (cadr spec)
+				      :pos (cddr spec))
+		       glyphs))
+	    (apply #'make-instance 'manuscript :name (first description) :glyphs (reverse glyphs) (rest description)))))))
 
 (defclass table ()
   ((name :initarg :name :reader tbl-name)

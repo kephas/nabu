@@ -11,6 +11,7 @@
   :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "hunchentoot" "drakma"
 			"hu.dwim.stefil")
   :components ((:file "package")
+	       (:file "misc")
 	       (:file "model")
 	       (:file "date")
 	       (:file "search")

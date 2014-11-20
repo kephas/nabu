@@ -19,11 +19,8 @@
 (defclass manuscript ()
   ((name :initarg :name :reader ms-name)
    (glyphs :initarg :glyphs :accessor ms-glyphs)
-   (years :initarg :years :accessor ms-years)
-   (material :initarg :mat :accessor ms-mat)
-   (ligature :initarg :lig :accessor ms-lig)
-   (place :initarg :place :accessor ms-place))
-  (:default-initargs :glyphs nil :years nil :mat nil :lig nil :place nil))
+   (metadata :initarg :meta :accessor nabu-metadata))
+  (:default-initargs :glyphs nil :meta (make-hash-table :test 'equal)))
 
 (defclass glyph ()
   ((char :initarg :char :reader glyph-char)

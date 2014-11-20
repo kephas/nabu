@@ -37,3 +37,20 @@
 (defmethod print-object ((object table) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (princ (tbl-name object) stream)))
+
+
+#| Text UI |#
+
+(defgeneric tui-print (object))
+
+(defmethod tui-print ((object manuscript))
+  (format *query-io* "~a[~a] || " (ms-name object) (length (ms-glyphs object)))
+  (maphash (lambda (key value) (format *query-io* "~a=~a | " key value)) (nabu-metadata object))
+  (terpri *query-io*))
+
+(defun tui-list (objects)
+  (dolist (object objects)
+    (tui-print object)))
+
+(defun tui-search (query objects)
+  (tui-list (remove-if (complement (make-search-matcher query)) objects)))

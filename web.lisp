@@ -47,6 +47,10 @@
 	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
 	(:script :src "/bootstrap.min.js"))))))
 
+(define-easy-handler (home :uri "/") ()
+  (redirect (if (zerop (hash-table-count *tables*))
+		"/mss" "/tables")))
+
 (define-easy-handler (show-mss :uri "/mss") ()
   (nabu-page "Manuscripts"
     (:form :method "GET" :action "/mss2tbl"

@@ -12,6 +12,7 @@
 			"hu.dwim.stefil")
   :components ((:file "package")
 	       (:file "model")
+	       (:file "date")
 	       (:file "test")
 	       (:file "web"))
   :serial t)

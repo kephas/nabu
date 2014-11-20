@@ -13,6 +13,7 @@
   :components ((:file "package")
 	       (:file "model")
 	       (:file "date")
+	       (:file "search")
 	       (:file "test")
 	       (:file "web"))
   :serial t)

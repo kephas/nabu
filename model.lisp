@@ -39,7 +39,8 @@
 				      :char (cadr spec)
 				      :pos (cddr spec))
 		       glyphs))
-	    (apply #'make-instance 'manuscript :name (first description) :glyphs (reverse glyphs) (rest description)))))))
+	    (make-instance 'manuscript :name (first description) :glyphs (reverse glyphs)
+			   :meta (alist->hash (second description))))))))
 
 (defclass table ()
   ((name :initarg :name :reader tbl-name)

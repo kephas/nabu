@@ -49,7 +49,7 @@
 
 #| Human-typable sexp search expression engine |#
 
-(defconstant +noop-query+ (list "" (constantly nil)))
+(defparameter +noop-query+ (list "" (constantly nil)))
 
 (defun sexp->query (sexp &optional (top-level? t))
   (let ((sexp (if (and top-level? (not (symbolp (first sexp))))

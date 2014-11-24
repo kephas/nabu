@@ -51,7 +51,7 @@
 
 (defparameter +noop-query+ (list "" (constantly nil)))
 
-(defun sexp->query (sexp &optional (top-level? t))
+(defun sexp->query-ast (sexp &optional (top-level? t))
   (let ((sexp (if (and top-level? (not (symbolp (first sexp))))
 		  (cons 'and sexp) sexp)))
     (let ((operator (first sexp))
@@ -59,7 +59,7 @@
       (typecase operator
 	(symbol (cons operator
 		      (mapcar (lambda (sxp)
-				(sexp->query sxp nil))
+				(sexp->query-ast sxp nil))
 			      operands)))
 	(string
 	 (let ((value (first operands)))
@@ -73,3 +73,17 @@
 	      (list operator (%make-date-checker (list value))))
 	     (t +noop-query+))))
 	(t +noop-query+)))))
+
+#| Actual search |#
+
+(deftag $sexpr sexpr)
+(deftag $query-ast ast)
+
+(defun do-search (query objects)
+  (let ((predicate (match query
+		     ((tag $sexpr sexpr)
+		      (make-search-matcher (sexp->query-ast sexpr)))
+		     ((tag $query-ast ast)
+		      (make-search-matcher ast))
+		     ((type function) query))))
+    (remove-if (complement predicate) objects)))

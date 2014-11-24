@@ -53,4 +53,4 @@
     (tui-print object)))
 
 (defun tui-search (query objects)
-  (tui-list (remove-if (complement (make-search-matcher query)) objects)))
+  (tui-list (do-search query objects)))

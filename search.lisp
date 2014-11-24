@@ -29,10 +29,17 @@
 (defgeneric make-search-operator (operator operands))
 
 (defun make-search-matcher (query)
-  (let* ((key (first query)))
-    (typecase key
-      (symbol (make-search-operator key (rest query)))
-      (string (make-field-matcher key (second query))))))
+  (if (listp query)
+      (let* ((key (first query)))
+	(typecase key
+	  (symbol (make-search-operator key (rest query)))
+	  (string (make-field-matcher key (second query)))
+	  (t (constantly nil))))
+      (constantly nil)))
+
+(defmethod make-search-operator (operator operands)
+  (declare (ignore operator operands))
+  (constantly nil))
 
 (defmethod make-search-operator ((operator (eql 'and)) operands)
   (lambda (object)

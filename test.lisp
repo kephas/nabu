@@ -24,6 +24,14 @@
 (defsuite* all)
 
 (in-suite all)
+(defsuite* misc)
+
+(deftest read-all ()
+  (is (equal '(1 2 3) (nabu::read-all-from-string "1 2 3")))
+  (is (equal '(nil 1 #\a "foo" -1 nil) (nabu::read-all-from-string "nil 1 #\\a \"foo\" -1 nil")))
+  (is (not (nabu::read-all-from-string ""))))
+
+(in-suite all)
 (defsuite* date)
 
 (deftest within ()

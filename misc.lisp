@@ -33,3 +33,12 @@
 	    (setf (gethash (car pair) ht) (funcall key pair))
 	    (rec (rest pairs)))
 	  ht))))
+
+(defun read-all-from-string (string)
+  (let@ rec ((values nil)
+	     (start 0))
+    (multiple-value-bind (value offset)
+	(read-from-string string nil nil :start start)
+      (if (= start offset)
+	  (reverse values)
+	  (rec (cons value values) offset)))))

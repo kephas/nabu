@@ -25,4 +25,9 @@
 	(make-instance 'manuscript :name "B2" :meta (alist->hash '(("place" "Bethleem") ("material" "papyrus") ("years" (40 80)))))))
 
 (defparameter *search1* `(and ("material" ,(make-string= "velum")) ("years" ,(make-dates (20 60)))))
+(defparameter *sexpr1* '(("material" "velum") ("years" (20 60))))
+(defparameter *expr1* "material:velum  years:20-60")
+
 (defparameter *search2* `(and ("years" ,(make-dates (0 40)))))
+(defparameter *sexpr2* '(("years" (0 40))))
+(defparameter *expr2* "years:0-40")

@@ -45,3 +45,31 @@
 (defmethod make-search-operator ((operator (eql 'not)) operands)
   (lambda (object)
     (not (funcall (make-search-matcher (first operands)) object))))
+
+
+#| Human-typable sexp search expression engine |#
+
+(defconstant +noop-query+ (list "" (constantly nil)))
+
+(defun sexp->query (sexp &optional (top-level? t))
+  (let ((sexp (if (and top-level? (not (symbolp (first sexp))))
+		  (cons 'and sexp) sexp)))
+    (let ((operator (first sexp))
+	  (operands (rest sexp)))
+      (typecase operator
+	(symbol (cons operator
+		      (mapcar (lambda (sxp)
+				(sexp->query sxp nil))
+			      operands)))
+	(string
+	 (let ((value (first operands)))
+	   (cond
+	     ((stringp value)
+	      (list operator (make-string= value)))
+	     ((or (integerp value)
+		  (and (listp value)
+		       (integerp (first value))
+		       (integerp (second value))))
+	      (list operator (%make-date-checker (list value))))
+	     (t +noop-query+))))
+	(t +noop-query+)))))

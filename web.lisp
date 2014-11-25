@@ -30,6 +30,7 @@
      (:html
       (:head
        (:title (fmt "NABU - ~a" ,title))
+       (:meta :name "viewport" :content "width=device-width")
        (:link :href "/bootstrap.min.css" :rel "stylesheet")
        (:style :type "text/css" "body {margin: 4em 2em;}"))
       (:body

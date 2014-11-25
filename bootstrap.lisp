@@ -27,6 +27,14 @@
   (let ((class (format nil "btn btn-~a" btn-class)))
     `(htm (:button :type "submit" :class ,class ,@body))))
 
+(defmacro {collapse-btn} (target &optional (text "Toggle navigation"))
+  `(htm (:button :class "navbar-toggle collapsed" :type "button"
+		 :data-toggle "collapse" :data-target ,target
+		 (:span :class "sr-only" ,text)
+		 (:span :class "icon-bar")
+		 (:span :class "icon-bar")
+		 (:span :class "icon-bar"))))
+
 (defmacro {glyph} (name)
   (let ((class (format nil "glyphicon glyphicon-~a" name)))
     `(htm (:span :class ,class :aria-hidden "true"))))

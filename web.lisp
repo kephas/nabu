@@ -137,11 +137,7 @@
 (defun glyph-url (glyph)
   (bind (((kind datum) (glyph-img glyph)))
     (case kind
-      (:file (format nil "/img?path=~a" datum))
       (:uri datum))))
-
-(define-easy-handler (baaad-img :uri "/img") (path)
-  (handle-static-file path))
 
 (define-easy-handler  (show-table :uri "/tbl") (name)
   (if-let (table (gethash name *tables*))

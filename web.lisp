@@ -51,6 +51,20 @@
   (redirect (if (zerop (hash-table-count *tables*))
 		"/mss" "/tables")))
 
+(defparameter +s-filter+ "s-filter")
+
+(defun filtering? ()
+  (get-parameter +s-filter+))
+
+(defun filter-mss (manuscripts)
+  (let ((query (if-let (s-filter (get-parameter +s-filter+))
+		 (let ((sexpr (read-all-from-string s-filter)))
+		   (if (null sexpr)
+		       (constantly t)
+		       ($sexpr sexpr)))
+		 (constantly t))))
+    (do-search query manuscripts)))
+
 (define-easy-handler (show-mss :uri "/mss") ()
   (nabu-page "Manuscripts"
     (:form :method "GET" :action "/mss2tbl"

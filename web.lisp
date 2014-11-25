@@ -174,3 +174,6 @@
       (nabu-page "New table"
 	(let ((url (format nil "/tbl?name=~a" (tbl-name table))))
 	  (htm (:p (:a :href url (str (tbl-name table))))))))))
+
+(defun web-start (port)
+  (start (make-instance 'easy-acceptor :port port)))

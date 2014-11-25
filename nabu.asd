@@ -17,5 +17,6 @@
 	       (:file "date")
 	       (:file "search")
 	       (:file "test")
+	       (:file "bootstrap")
 	       (:file "web"))
   :serial t)

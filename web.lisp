@@ -74,36 +74,34 @@
 		   :href "/mss"
 		   "View all manuscripts")))
       (htm (:form :role "form" :method "GET" :action "/mss"
-		  (:div :class "row"
-			(:div :class "" (:label "Add filter:")))
-		  (:div :class "row"
-			(:div :class "col-md-10"
-			      (:input :class "form-control" :type "text" :name "s-filter"))
-			(:div :class "col-md-2"
-			      (:button :type "submit" :class "btn btn-default" "Filter"))))))
+		  ({row}
+		    (:div (:label "Add filter:")))
+		  ({row}
+		    ({col} 8 10 (:input :class "form-control" :type "text" :name "s-filter"))
+		    ({col} 4 2 ({submit} "default" "Filter"))))))
     (:hr)
     (:form :role "form" :method "GET" :action "/mss2tbl"
 	   (:div :class "form-group"
 		 (dolist (ms (filter-mss *manuscripts*))
 		   (htm
 		    (:div (:input :class "form-inline" :type "checkbox" :name (ms-name ms) (str (ms-name ms))))))
-		 (:div :class "row"
-		       (:div :class "col-md-6"
-			     (:div :class "input-group"
-				   (:label :class "input-group-addon" "Table name:")
-				   (:input :class "form-control" :name "--NAME")))
-		       (:div :class "col-md-6"
-			     (:button :type "submit" :class "btn btn-primary" "Create table")))))
+		 ({row}
+		   ({col} 12 6
+		     (:div :class "input-group"
+			   (:label :class "input-group-addon" "Table name:")
+			   (:input :class "form-control" :name "--NAME")))
+		   ({col} 4 6
+		     ({submit} "primary" "Create table")))))
     (:hr)
     (:h2 "Add manuscript")
     ((:form :role "form" :method "GET" :action "/addms")
-     (:div :class "row"
-	   (:div :class "col-md-10"
-		 (:div :class "input-group"
-		       (:label :class "input-group-addon" "URI ")
-		       (:input :class "form-control" :type "url" :name "uri")))
-	   (:div :class "col-md-2"
-		 (:button :type "submit" :class "btn btn-primary" "Add"))))))
+     ({row}
+       ({col} 12 10
+	 (:div :class "input-group"
+	       (:label :class "input-group-addon" "URI ")
+	       (:input :class "form-control" :type "url" :name "uri")))
+       ({col} 12 2
+	 ({submit} "primary" "Add"))))))
 
 (define-easy-handler (add-ms :uri "/addms") (uri)
   (let ((new (read-images-manifest uri)))

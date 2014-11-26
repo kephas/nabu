@@ -149,6 +149,11 @@
     (case kind
       (:uri datum))))
 
+(defun table-404 (name)
+  (setf (return-code*) +http-not-found+)
+  (nabu-page "Table not found"
+    ({alert} ("warning") "Table " (:code (str name)) " not found.")))
+
 (define-easy-handler  (show-table :uri "/tbl") (name)
   (if-let (table (gethash name *tables*))
     (progn
@@ -165,8 +170,15 @@
 				      (htm (:img :src img)))))))
 			   (tbl-ab table))))))
     (progn
-      (setf (return-code*) +http-not-found+)
-      (nabu-page "Table not found"))))
+      (table-404 name))))
+
+(define-easy-handler (rm-table :uri "/rm-tbl") (name redirect)
+  (if (remhash name *tables*)
+      (if redirect
+	  (redirect (format nil "/tbl?removed=~a" name))
+	  (nabu-page "Table removed"
+	    ({alert} ("success") (:code (str name)) "removed.")))
+      (table-404 name)))
 
 (define-easy-handler (new-table :uri "/new-tbl") ()
   (let ((ab (make-hash-table :test 'equal)))

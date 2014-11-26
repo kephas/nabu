@@ -36,6 +36,15 @@
     (once-only (href)
       `(htm (:a :class ,class :href ,href ,@body)))))
 
+(defmacro {alert} ((alert-class &optional dismiss?) &body body)
+  (let ((class (format nil "alert alert-~a ~a" alert-class (if dismiss? "alert-dismissible" ""))))
+    `(htm ((:div :class ,class :role "alert")
+	   (when ,dismiss?
+	     (htm ((:button :type "button" :class "close" :data-dismiss "alert")
+		   (:span :aria-hidden "true" "×")
+		   (:span :class "sr-only" "Close"))))
+	   ,@body))))
+
 (defmacro {collapse-btn} (target &optional (text "Toggle navigation"))
   `(htm (:button :class "navbar-toggle collapsed" :type "button"
 		 :data-toggle "collapse" :data-target ,target

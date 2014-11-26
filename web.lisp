@@ -179,6 +179,32 @@
     (progn
       (table-404 name))))
 
+(define-easy-handler (compare-tables :uri "/tbls") ()
+  (let* ((table-names (get-checked-parameters))
+	 (tables (mapcan (lambda (name)
+			   (if-let (table (gethash name *tables*))
+			     (list table)))
+			 table-names))
+	 (union (ab-union tables)))
+    (nabu-page "Compare tables"
+      (:div (dolist (name table-names)
+	      (htm ({active} ("default" :size "sm") (format nil "/tbl?name=~a" name) (str name)) " ")))
+      :hr
+      ((:table :class "table table-hover table-bordered")
+       (:thead
+	(:tr
+	 (:th " ")
+	 (dolist (name table-names)
+	   (htm (:th (str name))))))
+       (:tbody
+	(dolist (char union)
+	  (htm (:tr
+		(:td (str char))
+		(dolist (table tables)
+		  (htm (:td
+			(dolist (img (gethash char (tbl-ab table)))
+			  (htm (:img :src img))))))))))))))
+
 (define-easy-handler (rm-table :uri "/rm-tbl") (name redirect)
   (if (remhash name *tables*)
       (if redirect

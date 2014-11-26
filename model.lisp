@@ -52,3 +52,11 @@
 		       (dolist (ms mss table)
 			 (dolist (glyph (ms-glyphs ms))
 			   (push (glyph-url glyph) (gethash (glyph-char glyph) table)))))))
+
+(defun ab-union (tables)
+  "Return the union of the alphabets of several tables, as a sorted list of chars"
+  (let ((union (make-hash-table :test 'equal)))
+    (dolist (table tables)
+      (dolist (entry (hash-table-keys (tbl-ab table)))
+	(setf (gethash entry union) t)))
+    (sort (hash-table-keys union) #'string>)))

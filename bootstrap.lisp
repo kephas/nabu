@@ -32,9 +32,9 @@
     `(htm (:button :type "submit" :class ,class ,@body))))
 
 (defmacro {active} (btn-class btn-size href &body body)
-  (let ((class (format nil "btn btn-~a btn-~a active" btn-class btn-size)))
+  (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] active" btn-class btn-size)))
     (once-only (href)
-      `(htm (:a :class class :href ,href ,@body)))))
+      `(htm (:a :class ,class :href ,href ,@body)))))
 
 (defmacro {collapse-btn} (target &optional (text "Toggle navigation"))
   `(htm (:button :class "navbar-toggle collapsed" :type "button"

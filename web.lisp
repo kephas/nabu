@@ -19,6 +19,12 @@
 (defvar *manuscripts* nil)
 
 
+(defun get-checked-parameters ()
+  (mapcan (lambda (param)
+	    (if (equal "on" (cdr param)) (list (car param))))
+	  (get-parameters*)))
+
+
 (define-easy-handler (bootstrap-css :uri "/bootstrap.min.css") ()
   (handle-static-file "/home/pierre/Development/nabu/bootstrap.min.css"))
 
@@ -125,9 +131,7 @@
 			   (mapcan (lambda (name)
 				     (if-let (ms (find name *manuscripts* :key #'ms-name :test #'equal))
 				       (list ms)))
-				   (mapcan (lambda (param)
-					     (if (equal "on" (cdr param)) (list (car param))))
-					   (get-parameters*))))))
+				   (get-checked-parameters)))))
     (setf (gethash (tbl-name table) *tables*) table)
     (nabu-page "New table"
       (let ((url (format nil "/tbl?name=~a" (tbl-name table))))

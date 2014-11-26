@@ -31,8 +31,8 @@
   (let ((class (format nil "btn btn-~a" btn-class)))
     `(htm (:button :type "submit" :class ,class ,@body))))
 
-(defmacro {active} (btn-class btn-size href &body body)
-  (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] active" btn-class btn-size)))
+(defmacro {active} ((btn-class &key size (classes "")) href &body body)
+  (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] active ~a" btn-class size classes)))
     (once-only (href)
       `(htm (:a :class ,class :href ,href ,@body)))))
 

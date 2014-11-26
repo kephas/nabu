@@ -84,7 +84,7 @@
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))
-	       ({active} "success" "sm" "/mss" "View all manuscripts")))
+	       ({active} ("success" :size "sm") "/mss" "View all manuscripts")))
       (htm (:form :role "form" :method "GET" :action "/mss"
 		  ({row}
 		    (:div (:label "Add filter:")))
@@ -129,7 +129,9 @@
     (:form :role "form" :method "GET" :action "/tbls"
 	   (maphash-keys (lambda (name)
 			   ({checkbox} name
-			     ({active} "default" "sm" (format nil "/tbl?name=~a" name) (str name))))
+			     ({active} ("default" :size "lg") (format nil "/tbl?name=~a" name) (str name))
+			     " " ({active} ("warning" :size "sm") (format nil "/edit-tbl?name=~a" name) "Edit")
+			     " " ({active} ("danger" :size "sm") (format nil "/rm-tbl?name=~a&redirect=t" name) "Remove")))
 			 *tables*)
 	   ({submit} "primary" "Compare tables"))))
 
@@ -158,7 +160,8 @@
   (if-let (table (gethash name *tables*))
     (progn
       (nabu-page (tbl-name table)
-	({row} ({active} "warning" nil (format nil "/edit-tbl?name=~a" name) "Edit"))
+	({row} ({active} ("warning") (format nil "/edit-tbl?name=~a" name) "Edit") " "
+	       ({active} ("danger") (format nil "/rm-tbl?name=~a" name) "Remove"))
 	:hr
 	({row}
 	  (:table :class "table table-hover"

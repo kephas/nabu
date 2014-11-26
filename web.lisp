@@ -142,16 +142,17 @@
   (if-let (table (gethash name *tables*))
     (progn
       (nabu-page (tbl-name table)
-	(let ((url (format nil "/edit-tbl?name=~a" name)))
-	  (htm (:p (:a :href url "Edit"))))
-	(:table
-	 (maphash (lambda (char images)
-		    (htm (:tr
-			  (:td (str char))
-			  (:td
-			   (dolist (img images)
-			     (htm (:img :src img)))))))
-		  (tbl-ab table)))))
+	({row} ({active} "warning" nil (format nil "/edit-tbl?name=~a" name) "Edit"))
+	:hr
+	({row}
+	  (:table :class "table table-hover"
+		  (maphash (lambda (char images)
+			     (htm (:tr
+				   (:td (str char))
+				   (:td
+				    (dolist (img images)
+				      (htm (:img :src img)))))))
+			   (tbl-ab table))))))
     (progn
       (setf (return-code*) +http-not-found+)
       (nabu-page "Table not found"))))

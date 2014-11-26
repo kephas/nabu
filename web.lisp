@@ -19,10 +19,16 @@
 (defvar *manuscripts* nil)
 
 
-(defun get-checked-parameters ()
+(defun %checked-parameters (params)
   (mapcan (lambda (param)
 	    (if (equal "on" (cdr param)) (list (car param))))
-	  (get-parameters*)))
+	  params))
+
+(defun get-checked-parameters ()
+  (%checked-parameters (get-parameters*)))
+
+(defun post-checked-parameters ()
+  (%checked-parameters (post-parameters*)))
 
 
 (define-easy-handler (bootstrap-css :uri "/bootstrap.min.css") ()
@@ -164,11 +170,10 @@
 
 (define-easy-handler (new-table :uri "/new-tbl") ()
   (let ((ab (make-hash-table :test 'equal)))
-    (dolist (param (post-parameters*))
-      (when (equal (cdr param) "on")
-	(bind (((:values _ regs) (scan-to-strings "(.):(.*)" (car param)))
-	       (#(char path) regs))
-	  (push path (gethash char ab)))))
+    (dolist (param (post-checked-parameters))
+      (bind (((:values _ regs) (scan-to-strings "(.):(.*)" param))
+	     (#(char path) regs))
+	(push path (gethash char ab))))
     (let ((table (make-instance 'table
 				:name (post-parameter "--NAME")
 				:ab ab)))

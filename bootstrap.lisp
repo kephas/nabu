@@ -23,6 +23,10 @@
   (let ((class (format nil "col-xs-~a col-md-~a" xs md)))
     `(htm (:div :class ,class ,@body))))
 
+(defmacro {checkbox} (id &body body)
+  `(htm (:div :class "checkbox"
+	      (:input :type "checkbox" :name ,id ,@body))))
+
 (defmacro {submit} (btn-class &body body)
   (let ((class (format nil "btn btn-~a" btn-class)))
     `(htm (:button :type "submit" :class ,class ,@body))))

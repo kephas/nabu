@@ -86,7 +86,8 @@
 	   (:div :class "form-group"
 		 (dolist (ms (filter-mss *manuscripts*))
 		   (htm
-		    (:div (:input :class "form-inline" :type "checkbox" :name (ms-name ms) (str (ms-name ms))))))
+		    ({row}
+		      ({col} 12 12 ({checkbox} (ms-name ms) (str (ms-name ms)))))))
 		 ({row}
 		   ({col} 12 6
 		     (:div :class "input-group"

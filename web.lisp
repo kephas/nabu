@@ -124,8 +124,10 @@
 
 (defparameter *tables* (make-hash-table :test 'equal))
 
-(define-easy-handler (show-tables :uri "/tables") ()
+(define-easy-handler (show-tables :uri "/tables") (removed)
   (nabu-page "Tables"
+    (when removed
+      (htm ({alert} ("warning" t) "Table " (:code (str removed)) " removed")))
     (:form :role "form" :method "GET" :action "/tbls"
 	   (maphash-keys (lambda (name)
 			   ({checkbox} name
@@ -133,7 +135,9 @@
 			     " " ({active} ("warning" :size "sm") (format nil "/edit-tbl?name=~a" name) "Edit")
 			     " " ({active} ("danger" :size "sm") (format nil "/rm-tbl?name=~a&redirect=t" name) "Remove")))
 			 *tables*)
-	   ({submit} "primary" "Compare tables"))))
+	   (unless (zerop (hash-table-count *tables*))
+	     (htm ({submit} "primary" "Compare tables"))))))
+
 
 (define-easy-handler (mss2tbl :uri "/mss2tbl") ()
   (let ((table (make-table (get-parameter "--NAME")
@@ -178,9 +182,9 @@
 (define-easy-handler (rm-table :uri "/rm-tbl") (name redirect)
   (if (remhash name *tables*)
       (if redirect
-	  (redirect (format nil "/tbl?removed=~a" name))
+	  (redirect (format nil "/tables?removed=~a" name))
 	  (nabu-page "Table removed"
-	    ({alert} ("success") (:code (str name)) "removed.")))
+	    ({alert} ("warning") (:code (str name)) "removed.")))
       (table-404 name)))
 
 (define-easy-handler (new-table :uri "/new-tbl") ()

@@ -120,11 +120,12 @@
 
 (define-easy-handler (show-tables :uri "/tables") ()
   (nabu-page "Tables"
-    (:ul
-     (maphash-keys (lambda (name)
-		     (let ((url (format nil "/tbl?name=~a" name)))
-		       (htm (:li (:a :href url (str name))))))
-		   *tables*))))
+    (:form :role "form" :method "GET" :action "/tbls"
+	   (maphash-keys (lambda (name)
+			   ({checkbox} name
+			     ({active} "default" "sm" (format nil "/tbl?name=~a" name) (str name))))
+			 *tables*)
+	   ({submit} "primary" "Compare tables"))))
 
 (define-easy-handler (mss2tbl :uri "/mss2tbl") ()
   (let ((table (make-table (get-parameter "--NAME")

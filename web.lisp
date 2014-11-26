@@ -72,9 +72,7 @@
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))
-	       (:a :class "btn btn-success btn-sm active"
-		   :href "/mss"
-		   "View all manuscripts")))
+	       ({active} "success" "sm" "/mss" "View all manuscripts")))
       (htm (:form :role "form" :method "GET" :action "/mss"
 		  ({row}
 		    (:div (:label "Add filter:")))

@@ -1,4 +1,4 @@
- #| NABU - Prototype palaeographic table builder
+ #| NABU - Prototype palaeographic chart builder
     Copyright (C) 2014 Pierre Thierry <pierre@nothos.net>
 
     This program is free software: you can redistribute it and/or modify
@@ -17,12 +17,12 @@
 (in-package :nothos.net/2014.05.nabu)
 
 
-(defparameter *fake-mss*
-  (list (make-instance 'manuscript :name "Q1" :meta (alist->hash '(("place" "Qumran") ("material" "papyrus") ("years" 20))))
-	(make-instance 'manuscript :name "Q2" :meta (alist->hash '(("place" "Qumran") ("material" "velum") ("years" 200))))
-	(make-instance 'manuscript :name "Q3" :meta (alist->hash '(("place" "Qumran") ("material" "velum") ("years" (50 150)))))
-	(make-instance 'manuscript :name "B1" :meta (alist->hash '(("place" "Bethleem") ("material" "velum") ("years" 30))))
-	(make-instance 'manuscript :name "B2" :meta (alist->hash '(("place" "Bethleem") ("material" "papyrus") ("years" (40 80)))))))
+(defparameter *fake-units*
+  (list (make-instance 'unit :name "Q1" :meta (alist->hash '(("place" "Qumran") ("material" "papyrus") ("years" 20))))
+	(make-instance 'unit :name "Q2" :meta (alist->hash '(("place" "Qumran") ("material" "velum") ("years" 200))))
+	(make-instance 'unit :name "Q3" :meta (alist->hash '(("place" "Qumran") ("material" "velum") ("years" (50 150)))))
+	(make-instance 'unit :name "B1" :meta (alist->hash '(("place" "Bethleem") ("material" "velum") ("years" 30))))
+	(make-instance 'unit :name "B2" :meta (alist->hash '(("place" "Bethleem") ("material" "papyrus") ("years" (40 80)))))))
 
 (defparameter *query1* `(and ("material" ,(make-string= "velum")) ("years" ,(make-dates (20 60)))))
 (defparameter *sexpr1* '(("material" "velum") ("years" (20 60))))

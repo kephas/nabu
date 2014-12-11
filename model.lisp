@@ -1,4 +1,4 @@
- #| NABU - Prototype palaeographic table builder
+ #| NABU - Prototype palaeographic chart builder
     Copyright (C) 2013 Pierre Thierry <pierre@nothos.net>
 
     This program is free software: you can redistribute it and/or modify
@@ -16,9 +16,10 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-(defclass manuscript ()
-  ((name :initarg :name :reader ms-name)
-   (glyphs :initarg :glyphs :accessor ms-glyphs)
+(defclass unit ()
+  ((name :initarg :name :reader unit-name)
+   (glyphs :initarg :glyphs :accessor unit-glyphs)
+   (uri :initarg :uri :reader unit-uri)
    (metadata :initarg :meta :accessor nabu-metadata))
   (:default-initargs :glyphs nil :meta (make-hash-table :test 'equal)))
 
@@ -39,24 +40,25 @@
 				      :char (cadr spec)
 				      :pos (cddr spec))
 		       glyphs))
-	    (make-instance 'manuscript :name (first description) :glyphs (reverse glyphs)
+	    (make-instance 'unit :name (first description) :glyphs (reverse glyphs) :uri uri
 			   :meta (alist->hash (second description))))))))
 
-(defclass table ()
-  ((name :initarg :name :reader tbl-name)
-   (alphabet :initarg :ab :reader tbl-ab)))
+(defclass combined ()
+  ((name :initarg :name :reader cmb-name)
+   (units :initarg :units :reader cmb-units)
+   (alphabet :initarg :ab :reader cmb-ab)))
 
-(defun make-table (name mss)
-  (make-instance 'table :name name
-		 :ab (let ((table (make-hash-table :test 'equal)))
-		       (dolist (ms mss table)
-			 (dolist (glyph (ms-glyphs ms))
-			   (push (glyph-url glyph) (gethash (glyph-char glyph) table)))))))
+(defun make-combined (name units)
+  (make-instance 'combined :name name :units units
+		 :ab (let ((combined (make-hash-table :test 'equal)))
+		       (dolist (unit units combined)
+			 (dolist (glyph (unit-glyphs unit))
+			   (push (glyph-url glyph) (gethash (glyph-char glyph) combined)))))))
 
-(defun ab-union (tables)
-  "Return the union of the alphabets of several tables, as a sorted list of chars"
+(defun ab-union (combineds)
+  "Return the union of the alphabets of several combineds, as a sorted list of chars"
   (let ((union (make-hash-table :test 'equal)))
-    (dolist (table tables)
-      (dolist (entry (hash-table-keys (tbl-ab table)))
+    (dolist (combined combineds)
+      (dolist (entry (hash-table-keys (cmb-ab combined)))
 	(setf (gethash entry union) t)))
     (sort (hash-table-keys union) #'string>)))

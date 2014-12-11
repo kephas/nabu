@@ -1,4 +1,4 @@
- #| NABU - Prototype palaeographic table builder
+ #| NABU - Prototype palaeographic chart builder
     Copyright (C) 2013 Pierre Thierry <pierre@nothos.net>
 
     This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-(defvar *manuscripts* nil)
+(defvar *units* nil)
 
 
 (defun %checked-parameters (params)
@@ -53,8 +53,8 @@
 	  ((:a :class "navbar-brand" :href "#") "NABU"))
 	 ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
 	  ((:ul :class "nav navbar-nav")
-	   (:li (:a :href "/mss" "Manuscripts"))
-	   (:li (:a :href "/tables" "Tables"))))))
+	   (:li (:a :href "/units" "Units"))
+	   (:li (:a :href "/combineds" "Combineds"))))))
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body
@@ -62,52 +62,52 @@
 	(:script :src "/bootstrap.min.js"))))))
 
 (define-easy-handler (home :uri "/") ()
-  (redirect (if (zerop (hash-table-count *tables*))
-		"/mss" "/tables")))
+  (redirect (if (zerop (hash-table-count *combineds*))
+		"/units" "/combineds")))
 
 (defparameter +s-filter+ "s-filter")
 
 (defun filtering? ()
   (get-parameter +s-filter+))
 
-(defun filter-mss (manuscripts)
+(defun filter-units (units)
   (let ((query (if-let (s-filter (get-parameter +s-filter+))
 		 (let ((sexpr (read-all-from-string s-filter)))
 		   (if (null sexpr)
 		       (constantly t)
 		       ($sexpr sexpr)))
 		 (constantly t))))
-    (do-search query manuscripts)))
+    (do-search query units)))
 
-(define-easy-handler (show-mss :uri "/mss") ()
-  (nabu-page "Manuscripts"
+(define-easy-handler (show-units :uri "/units") ()
+  (nabu-page "Units"
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))
-	       ({active} ("success" :size "sm") "/mss" "View all manuscripts")))
-      (htm (:form :role "form" :method "GET" :action "/mss"
+	       ({active} ("success" :size "sm") "/units" "View all units")))
+      (htm (:form :role "form" :method "GET" :action "/units"
 		  ({row}
 		    (:div (:label "Add filter:")))
 		  ({row}
 		    ({col} 8 10 (:input :class "form-control" :type "text" :name "s-filter"))
 		    ({col} 4 2 ({submit} "default" "Filter"))))))
     (:hr)
-    (:form :role "form" :method "GET" :action "/mss2tbl"
+    (:form :role "form" :method "GET" :action "/units2tbl"
 	   (:div :class "form-group"
-		 (dolist (ms (filter-mss *manuscripts*))
+		 (dolist (ms (filter-units *units*))
 		   (htm
 		    ({row}
-		      ({col} 12 12 ({checkbox} (ms-name ms) (str (ms-name ms)))))))
+		      ({col} 12 12 ({checkbox} (unit-name ms) (str (unit-name ms)))))))
 		 ({row}
 		   ({col} 12 6
 		     (:div :class "input-group"
-			   (:label :class "input-group-addon" "Table name:")
+			   (:label :class "input-group-addon" "Chart name:")
 			   (:input :class "form-control" :name "--NAME")))
 		   ({col} 4 6
-		     ({submit} "primary" "Create table")))))
+		     ({submit} "primary" "Combine units")))))
     (:hr)
-    (:h2 "Add manuscript")
-    ((:form :role "form" :method "GET" :action "/addms")
+    (:h2 "Add unit")
+    ((:form :role "form" :method "GET" :action "/addunit")
      ({row}
        ({col} 12 10
 	 (:div :class "input-group"
@@ -116,54 +116,54 @@
        ({col} 12 2
 	 ({submit} "primary" "Add"))))))
 
-(define-easy-handler (add-ms :uri "/addms") (uri)
+(define-easy-handler (add-unit :uri "/addunit") (uri)
   (let ((new (read-images-manifest uri)))
-    (push new *manuscripts*)
-    (nabu-page "Manuscript added"
-      (:p (str (ms-name new))))))
+    (push new *units*)
+    (nabu-page "Unit added"
+      (:p (str (unit-name new))))))
 
-(defparameter *tables* (make-hash-table :test 'equal))
+(defparameter *combineds* (make-hash-table :test 'equal))
 
-(define-easy-handler (show-tables :uri "/tables") (removed)
-  (nabu-page "Tables"
+(define-easy-handler (show-combineds :uri "/combineds") (removed)
+  (nabu-page "Combineds"
     (when removed
-      (htm ({alert} ("warning" t) "Table " (:code (str removed)) " removed")))
+      (htm ({alert} ("warning" t) "Combined chart " (:code (str removed)) " removed")))
     (:form :role "form" :method "GET" :action "/tbls"
 	   (maphash-keys (lambda (name)
 			   ({checkbox} name
 			     ({active} ("default" :size "lg") (format nil "/tbl?name=~a" name) (str name))
 			     " " ({active} ("warning" :size "sm") (format nil "/edit-tbl?name=~a" name) "Edit")
 			     " " ({active} ("danger" :size "sm") (format nil "/rm-tbl?name=~a&redirect=t" name) "Remove")))
-			 *tables*)
-	   (unless (zerop (hash-table-count *tables*))
-	     (htm ({submit} "primary" "Compare tables"))))))
+			 *combineds*)
+	   (unless (zerop (hash-table-count *combineds*))
+	     (htm ({submit} "primary" "Compare combineds"))))))
 
 
-(define-easy-handler (mss2tbl :uri "/mss2tbl") ()
-  (let ((table (make-table (get-parameter "--NAME")
+(define-easy-handler (units2tbl :uri "/units2tbl") ()
+  (let ((combined (make-combined (get-parameter "--NAME")
 			   (mapcan (lambda (name)
-				     (if-let (ms (find name *manuscripts* :key #'ms-name :test #'equal))
+				     (if-let (ms (find name *units* :key #'unit-name :test #'equal))
 				       (list ms)))
 				   (get-checked-parameters)))))
-    (setf (gethash (tbl-name table) *tables*) table)
-    (nabu-page "New table"
-      (let ((url (format nil "/tbl?name=~a" (tbl-name table))))
-	(htm (:a :href url (str (tbl-name table))))))))
+    (setf (gethash (cmb-name combined) *combineds*) combined)
+    (nabu-page "New combined chart"
+      (let ((url (format nil "/tbl?name=~a" (cmb-name combined))))
+	(htm (:a :href url (str (cmb-name combined))))))))
 
 (defun glyph-url (glyph)
   (bind (((kind datum) (glyph-img glyph)))
     (case kind
       (:uri datum))))
 
-(defun table-404 (name)
+(defun combined-404 (name)
   (setf (return-code*) +http-not-found+)
-  (nabu-page "Table not found"
-    ({alert} ("warning") "Table " (:code (str name)) " not found.")))
+  (nabu-page "Combined chart not found"
+    ({alert} ("warning") "Combined chart " (:code (str name)) " not found.")))
 
-(define-easy-handler  (show-table :uri "/tbl") (name)
-  (if-let (table (gethash name *tables*))
+(define-easy-handler  (show-combined :uri "/tbl") (name)
+  (if-let (combined (gethash name *combineds*))
     (progn
-      (nabu-page (tbl-name table)
+      (nabu-page (cmb-name combined)
 	({row} ({active} ("warning") (format nil "/edit-tbl?name=~a" name) "Edit") " "
 	       ({active} ("danger") (format nil "/rm-tbl?name=~a" name) "Remove"))
 	:hr
@@ -175,57 +175,57 @@
 				   (:td
 				    (dolist (img images)
 				      (htm (:img :src img)))))))
-			   (tbl-ab table))))))
+			   (cmb-ab combined))))))
     (progn
-      (table-404 name))))
+      (combined-404 name))))
 
-(define-easy-handler (compare-tables :uri "/tbls") ()
-  (let* ((table-names (get-checked-parameters))
-	 (tables (mapcan (lambda (name)
-			   (if-let (table (gethash name *tables*))
-			     (list table)))
-			 table-names))
-	 (union (ab-union tables)))
-    (nabu-page "Compare tables"
-      (:div (dolist (name table-names)
+(define-easy-handler (compare-combineds :uri "/tbls") ()
+  (let* ((combined-names (get-checked-parameters))
+	 (combineds (mapcan (lambda (name)
+			   (if-let (combined (gethash name *combineds*))
+			     (list combined)))
+			 combined-names))
+	 (union (ab-union combineds)))
+    (nabu-page "Compare combineds"
+      (:div (dolist (name combined-names)
 	      (htm ({active} ("default" :size "sm") (format nil "/tbl?name=~a" name) (str name)) " ")))
       :hr
       ((:table :class "table table-hover table-bordered")
        (:thead
 	(:tr
 	 (:th " ")
-	 (dolist (name table-names)
+	 (dolist (name combined-names)
 	   (htm (:th (str name))))))
        (:tbody
 	(dolist (char union)
 	  (htm (:tr
 		(:td (str char))
-		(dolist (table tables)
+		(dolist (combined combineds)
 		  (htm (:td
-			(dolist (img (gethash char (tbl-ab table)))
+			(dolist (img (gethash char (cmb-ab combined)))
 			  (htm (:img :src img))))))))))))))
 
-(define-easy-handler (rm-table :uri "/rm-tbl") (name redirect)
-  (if (remhash name *tables*)
+(define-easy-handler (rm-combined :uri "/rm-tbl") (name redirect)
+  (if (remhash name *combineds*)
       (if redirect
-	  (redirect (format nil "/tables?removed=~a" name))
-	  (nabu-page "Table removed"
+	  (redirect (format nil "/combineds?removed=~a" name))
+	  (nabu-page "Combined chart removed"
 	    ({alert} ("warning") (:code (str name)) "removed.")))
-      (table-404 name)))
+      (combined-404 name)))
 
-(define-easy-handler (new-table :uri "/new-tbl") ()
+(define-easy-handler (new-combined :uri "/new-tbl") ()
   (let ((ab (make-hash-table :test 'equal)))
     (dolist (param (post-checked-parameters))
       (bind (((:values _ regs) (scan-to-strings "(.):(.*)" param))
 	     (#(char path) regs))
 	(push path (gethash char ab))))
-    (let ((table (make-instance 'table
+    (let ((combined (make-instance 'combined
 				:name (post-parameter "--NAME")
 				:ab ab)))
-      (setf (gethash (tbl-name table) *tables*) table)
-      (nabu-page "New table"
-	(let ((url (format nil "/tbl?name=~a" (tbl-name table))))
-	  (htm (:p (:a :href url (str (tbl-name table))))))))))
+      (setf (gethash (cmb-name combined) *combineds*) combined)
+      (nabu-page "New combined chart"
+	(let ((url (format nil "/tbl?name=~a" (cmb-name combined))))
+	  (htm (:p (:a :href url (str (cmb-name combined))))))))))
 
 (defun web-start (port)
   (start (make-instance 'easy-acceptor :port port)))

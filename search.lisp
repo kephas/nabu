@@ -1,4 +1,4 @@
- #| NABU - Prototype palaeographic table builder
+ #| NABU - Prototype palaeographic chart builder
     Copyright (C) 2014 Pierre Thierry <pierre@nothos.net>
 
     This program is free software: you can redistribute it and/or modify

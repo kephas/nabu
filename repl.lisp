@@ -1,4 +1,4 @@
- #| NABU - Prototype palaeographic table builder
+ #| NABU - Prototype palaeographic chart builder
     Copyright (C) 2013 Pierre Thierry <pierre@nothos.net>
 
     This program is free software: you can redistribute it and/or modify
@@ -26,25 +26,25 @@
 	     (cons separator (cons (first list) result)))
 	(reverse (cons end (rest result))))))
 
-(defmethod print-object ((object manuscript) stream)
+(defmethod print-object ((object unit) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (format stream "~a~:[~;~1:* (~{~a~a~})~]" (ms-name object) (commatize (hash-keys (nabu-metadata object))))))
+    (format stream "~a~:[~;~1:* (~{~a~a~})~]" (unit-name object) (commatize (hash-keys (nabu-metadata object))))))
 
 (defmethod print-object ((object glyph) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "~a ~a" (glyph-char object) (glyph-pos object))))
 
-(defmethod print-object ((object table) stream)
+(defmethod print-object ((object combined) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (princ (tbl-name object) stream)))
+    (princ (cmb-name object) stream)))
 
 
 #| Text UI |#
 
 (defgeneric tui-print (object))
 
-(defmethod tui-print ((object manuscript))
-  (format *query-io* "~a[~a] || " (ms-name object) (length (ms-glyphs object)))
+(defmethod tui-print ((object unit))
+  (format *query-io* "~a[~a] || " (unit-name object) (length (unit-glyphs object)))
   (maphash (lambda (key value) (format *query-io* "~a=~a | " key value)) (nabu-metadata object))
   (terpri *query-io*))
 

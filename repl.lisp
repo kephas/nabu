@@ -17,15 +17,6 @@
 (in-package :nothos.net/2014.05.nabu)
 
 
-(defun commatize (list &optional (separator ",") (end ""))
-  "Prepare LIST to be pretty-printed through ~{~a~a~}"
-  (let@ rec ((list list)
-	     (result nil))
-    (if list
-	(rec (rest list)
-	     (cons separator (cons (first list) result)))
-	(reverse (cons end (rest result))))))
-
 (defmethod print-object ((object unit) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "~a~:[~;~1:* (~{~a~a~})~]" (unit-name object) (commatize (hash-keys (nabu-metadata object))))))

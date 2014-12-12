@@ -42,3 +42,15 @@
       (if (= start offset)
 	  (reverse values)
 	  (rec (cons value values) offset)))))
+
+(defun string-copy (string)
+  (map 'string #'identity string))
+
+(defun commatize (list &optional (separator ",") (end ""))
+  "Prepare LIST to be pretty-printed through ~{~a~a~}"
+  (let@ rec ((list list)
+	     (result nil))
+    (if list
+	(rec (rest list)
+	     (cons (string-copy separator) (cons (first list) result)))
+	(reverse (cons end (rest result))))))

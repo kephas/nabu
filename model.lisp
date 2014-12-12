@@ -76,17 +76,43 @@
   ((containers :initarg :cnt))
   (:default-initargs :cnt (make-hash-table :test 'equal)))
 
+(define-condition shell-path-not-traversable (error)
+  ((shell :initarg :shell)
+   (path :initarg :path))
+  (:report (lambda (condition stream)
+	     (with-slots (shell path) condition
+	       (format stream "~a ~{~a~a~}" shell (commatize path "/"))))))
+
+(defmacro with-path-error (shell path &body body)
+  (once-only (shell path)
+    `(handler-case
+	 (progn ,@body)
+       (type-error ()
+	 (error (make-condition 'shell-path-not-traversable :shell ,shell :path ,path))))))
+
 (defun shell-object (shell &rest path)
-  (let@ rec ((object (slot-value shell 'containers))
-	     (path path))
-    (if (null path)
-	object
-	(rec (gethash (first path) object) (rest path)))))
+  (with-path-error shell path
+    (let@ rec ((object (slot-value shell 'containers))
+	       (path path))
+      (if (null path)
+	  object
+	  (rec (gethash (first path) object) (rest path))))))
 
 (defun (setf shell-object) (value shell &rest path)
-  (assert (and (listp path) (consp path)))
-  (let@ rec ((object (slot-value shell 'containers))
-	     (path path))
-    (if (= 1 (length path))
-	(setf (gethash (first path) object) value)
-	(rec (gethash (first path) object) (rest path)))))
+  (with-path-error shell path
+    (let@ rec ((object (slot-value shell 'containers))
+	       (path path))
+      (if (= 1 (length path))
+	  (setf (gethash (first path) object) value)
+	  (rec (gethash (first path) object) (rest path))))))
+
+(defun shell-ensure (shell &rest path)
+  "Ensure that a shell path designates a container"
+  (with-path-error shell path
+    (let@ rec ((object (slot-value shell 'containers))
+	       (path path))
+      (when path
+	(bind (((:values _ found?) (gethash (first path) object)))
+	  (unless found?
+	    (setf (gethash (first path) object) (make-hash-table :test 'equal)))
+	  (rec (gethash (first path) object) (rest path)))))))

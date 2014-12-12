@@ -57,7 +57,7 @@
 	 ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
 	  ((:ul :class "nav navbar-nav")
 	   (:li (:a :href "/units" "Units"))
-	   (:li (:a :href "/combineds" "Combineds"))))))
+	   (:li (:a :href "/combineds" "Charts"))))))
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body

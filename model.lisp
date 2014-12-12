@@ -65,3 +65,28 @@
       (dolist (entry (hash-table-keys (cmb-ab combined)))
 	(setf (gethash entry union) t)))
     (sort (hash-table-keys union) #'string>)))
+
+
+#| Shell
+
+   A shell is a container for objects. It is meant to be the larger
+   object from which a user accesses the system |#
+
+(defclass shell ()
+  ((containers :initarg :cnt))
+  (:default-initargs :cnt (make-hash-table :test 'equal)))
+
+(defun shell-object (shell &rest path)
+  (let@ rec ((object (slot-value shell 'containers))
+	     (path path))
+    (if (null path)
+	object
+	(rec (gethash (first path) object) (rest path)))))
+
+(defun (setf shell-object) (value shell &rest path)
+  (assert (and (listp path) (consp path)))
+  (let@ rec ((object (slot-value shell 'containers))
+	     (path path))
+    (if (= 1 (length path))
+	(setf (gethash (first path) object) value)
+	(rec (gethash (first path) object) (rest path)))))

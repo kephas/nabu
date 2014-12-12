@@ -3,6 +3,8 @@
  *
  * @author Aidan Lister <aidan@php.net>
  * @version 1.0.0
+ *
+ * This code was released into public domain (cf. https://github.com/aidanlister/code)
  */
 (function ( $ ) {
     $.fn.stickyTabs = function() {

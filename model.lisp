@@ -48,8 +48,11 @@
    (units :initarg :units :reader cmb-units)
    (alphabet :initarg :ab :reader cmb-ab)))
 
+(defclass unit-chart (combined) ())
+
 (defun make-combined (name units)
-  (make-instance 'combined :name name :units units
+  (make-instance (if (= 1 (length units)) 'unit-chart 'combined)
+		 :name name :units units
 		 :ab (let ((combined (make-hash-table :test 'equal)))
 		       (dolist (unit units combined)
 			 (dolist (glyph (unit-glyphs unit))

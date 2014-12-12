@@ -18,5 +18,6 @@
 	       (:file "search")
 	       (:file "test")
 	       (:file "bootstrap")
-	       (:file "web"))
+	       (:file "web")
+	       (:file "repl"))
   :serial t)

@@ -52,3 +52,15 @@
       (is (funcall date-check good)))
     (dolist (bad '(0 3 7 (-1 0) (2 3) (7 8)))
       (is (not (funcall date-check bad))))))
+
+(in-suite all)
+(defsuite* shell)
+
+(deftest path ()
+  (let ((shell (make-instance 'nabu::shell)))
+    (nabu::shell-ensure shell "foo" "bar")
+    (setf (nabu::shell-object shell "foo" "baz") 1)
+    (is (not (nabu::shell-object shell "foo" "fubar")))
+    (is (not (nabu::shell-object shell "foo" "bar" "fubar")))
+    (signals nabu::shell-path-not-traversable (nabu::shell-object shell "foo" "quux" "quuux"))
+    (signals nabu::shell-path-not-traversable  (nabu::shell-object shell "foo" "baz" "fubar"))))

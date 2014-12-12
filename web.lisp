@@ -37,6 +37,9 @@
 (define-easy-handler (bootstrap-js :uri "/bootstrap.min.js") ()
   (handle-static-file "/home/pierre/Development/nabu/bootstrap.min.js"))
 
+(define-easy-handler (sticky-tabs-js :uri "/sticky-tabs.js") ()
+  (handle-static-file "/home/pierre/Development/nabu/sticky-tabs.js"))
+
 (defmacro nabu-page (title &body body)
   `(with-html-output-to-string (out)
      (:html
@@ -59,7 +62,8 @@
 	(:h1 (str ,title))
 	,@body
 	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
-	(:script :src "/bootstrap.min.js"))))))
+	(:script :src "/bootstrap.min.js")
+	(:script :src "/sticky-tabs.js"))))))
 
 (define-easy-handler (home :uri "/") ()
   (redirect (if (zerop (hash-table-count *tables*))

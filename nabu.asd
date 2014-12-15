@@ -9,7 +9,7 @@
   :author "Pierre Thierry <pierre@nothos.net>"
   :licence "AGPL"
   :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "hunchentoot" "drakma"
-			"hu.dwim.stefil" "cl-match")
+			"hu.dwim.stefil" "cl-match" "base64" "uuid")
   :components ((:file "package")
 	       (:file "misc")
 	       (:file "tag")

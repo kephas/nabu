@@ -125,7 +125,7 @@
 (define-easy-handler (add-unit :uri "/addunit") (uri)
   (let ((new (read-images-manifest uri)))
     (push new (shell-object *bad-default-shell* "units"))
-    (setf (shell-object *bad-default-shell* "combineds" (unit-name new))
+    (setf (shell-object *bad-default-shell* "combineds" (make-oid))
 	  (make-combined (unit-name new) (list new)))
     (nabu-page "Unit added"
       (:p (str (unit-name new))))))
@@ -134,13 +134,13 @@
   (nabu-page "Combineds"
     (when removed
       (htm ({alert} ("warning" t) "Combined chart " (:code (str removed)) " removed")))
-    (:form :role "form" :method "GET" :action "/tbls"
-	   (maphash-keys (lambda (name)
-			   ({checkbox} name
-			     ({active} ("default" :size "lg") (format nil "/tbl?name=~a" name) (str name))
-			     " " ({active} ("warning" :size "sm") (format nil "/edit-tbl?name=~a" name) "Edit")
-			     " " ({active} ("danger" :size "sm") (format nil "/rm-tbl?name=~a&redirect=t" name) "Remove")))
-			 *combineds*)
+    (:form :role "form" :method "GET" :action "/compare"
+	   (maphash (lambda (oid chart)
+		      ({checkbox} oid
+			({active} ("default" :size "lg") (format nil "/tbl?oid=~a" oid) (str (cmb-name chart)))
+			" " ({active} ("warning" :size "sm") (format nil "/edit-tbl?oid=~a" oid) "Edit")
+			" " ({active} ("danger" :size "sm") (format nil "/rm-tbl?oid=~a&redirect=t" oid) "Remove")))
+		    *combineds*)
 	   (unless (zerop (hash-table-count *combineds*))
 	     (htm ({submit} "primary" "Compare combineds"))))))
 
@@ -185,16 +185,16 @@
     (progn
       (combined-404 name))))
 
-(define-easy-handler (compare-combineds :uri "/tbls") ()
-  (let* ((combined-names (get-checked-parameters))
-	 (combineds (mapcan (lambda (name)
-			   (if-let (combined (gethash name *combineds*))
+(define-easy-handler (compare-combineds :uri "/compare") ()
+  (let* ((combined-oids (get-checked-parameters))
+	 (combineds (mapcan (lambda (oid)
+			   (if-let (combined (gethash oid *combineds*))
 			     (list combined)))
-			 combined-names))
+			 combined-oids))
 	 (union (ab-union combineds)))
     (nabu-page "Compare combineds"
-      (:div (dolist (name combined-names)
-	      (htm ({active} ("default" :size "sm") (format nil "/tbl?name=~a" name) (str name)) " ")))
+      (:div (dolist (name combined-oids)
+	      (htm ({active} ("default" :size "sm") (format nil "/tbl?oid=~a" name) (str name)) " ")))
       :hr
       ((:table :class "table table-hover table-bordered")
        (:thead

@@ -54,3 +54,6 @@
 	(rec (rest list)
 	     (cons (string-copy separator) (cons (first list) result)))
 	(reverse (cons end (rest result))))))
+
+(defun make-oid ()
+  (base64:usb8-array-to-base64-string (uuid:uuid-to-byte-array (uuid:make-v4-uuid))))

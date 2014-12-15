@@ -133,7 +133,7 @@
 (define-easy-handler (show-combineds :uri "/combineds") (removed)
   (nabu-page "Combineds"
     (when removed
-      (htm ({alert} ("warning" t) "Combined chart " (:code (str removed)) " removed")))
+      (htm ({alert} ("warning" t) "Combined chart " (str removed) " removed")))
     (:form :role "form" :method "GET" :action "/compare"
 	   (maphash (lambda (oid chart)
 		      ({checkbox} oid

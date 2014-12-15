@@ -230,19 +230,5 @@
 	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
     (combined-404 oid)))
 
-(define-easy-handler (new-combined :uri "/new-tbl") ()
-  (let ((ab (make-hash-table :test 'equal)))
-    (dolist (param (post-checked-parameters))
-      (bind (((:values _ regs) (scan-to-strings "(.):(.*)" param))
-	     (#(char path) regs))
-	(push path (gethash char ab))))
-    (let ((combined (make-instance 'combined
-				:name (post-parameter "--NAME")
-				:ab ab)))
-      (setf (gethash (cmb-name combined) *combineds*) combined)
-      (nabu-page "New combined chart"
-	(let ((url (format nil "/tbl?name=~a" (cmb-name combined))))
-	  (htm (:p (:a :href url (str (cmb-name combined))))))))))
-
 (defun web-start (port)
   (start (make-instance 'easy-acceptor :port port)))

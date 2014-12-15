@@ -137,9 +137,9 @@
     (:form :role "form" :method "GET" :action "/compare"
 	   (maphash (lambda (oid chart)
 		      ({checkbox} oid
-			({active} ("default" :size "lg") (format nil "/tbl?oid=~a" oid) (str (cmb-name chart)))
-			" " ({active} ("warning" :size "sm") (format nil "/edit-tbl?oid=~a" oid) "Edit")
-			" " ({active} ("danger" :size "sm") (format nil "/rm-tbl?oid=~a&redirect=t" oid) "Remove")))
+			({active} ("default" :size "lg") (format nil "/tbl?oid=~a" (urlencode oid)) (str (cmb-name chart)))
+			" " ({active} ("warning" :size "sm") (format nil "/edit-tbl?oid=~a" (urlencode oid)) "Edit")
+			" " ({active} ("danger" :size "sm") (format nil "/rm-tbl?oid=~a&redirect=t" (urlencode oid)) "Remove")))
 		    *combineds*)
 	   (unless (zerop (hash-table-count *combineds*))
 	     (htm ({submit} "primary" "Compare combineds"))))))
@@ -150,10 +150,11 @@
 			   (mapcan (lambda (name)
 				     (if-let (ms (find name (shell-object *bad-default-shell* "units") :key #'unit-name :test #'equal))
 				       (list ms)))
-				   (get-checked-parameters)))))
-    (setf (gethash (cmb-name combined) *combineds*) combined)
+				   (get-checked-parameters))))
+	(oid (make-oid)))
+    (setf (gethash oid *combineds*) combined)
     (nabu-page "New combined chart"
-      (let ((url (format nil "/tbl?name=~a" (cmb-name combined))))
+      (let ((url (format nil "/tbl?oid=~a" (urlencode oid))))
 	(htm (:a :href url (str (cmb-name combined))))))))
 
 (defun glyph-url (glyph)
@@ -161,17 +162,17 @@
     (case kind
       (:uri datum))))
 
-(defun combined-404 (name)
+(defun combined-404 (oid)
   (setf (return-code*) +http-not-found+)
-  (nabu-page "Combined chart not found"
-    ({alert} ("warning") "Combined chart " (:code (str name)) " not found.")))
+  (nabu-page "Chart not found"
+    ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 
-(define-easy-handler  (show-combined :uri "/tbl") (name)
-  (if-let (combined (gethash name *combineds*))
+(define-easy-handler  (show-combined :uri "/tbl") (oid)
+  (if-let (combined (gethash oid *combineds*))
     (progn
       (nabu-page (cmb-name combined)
-	({row} ({active} ("warning") (format nil "/edit-tbl?name=~a" name) "Edit") " "
-	       ({active} ("danger") (format nil "/rm-tbl?name=~a" name) "Remove"))
+	({row} ({active} ("warning") (format nil "/edit-tbl?oid=~a" (urlencode oid)) "Edit") " "
+	       ({active} ("danger") (format nil "/rm-tbl?oid=~a" (urlencode oid)) "Remove"))
 	:hr
 	({row}
 	  (:table :class "table table-hover"
@@ -183,41 +184,51 @@
 				      (htm (:img :src img)))))))
 			   (cmb-ab combined))))))
     (progn
-      (combined-404 name))))
+      (combined-404 oid))))
 
 (define-easy-handler (compare-combineds :uri "/compare") ()
-  (let* ((combined-oids (get-checked-parameters))
-	 (combineds (mapcan (lambda (oid)
-			   (if-let (combined (gethash oid *combineds*))
-			     (list combined)))
-			 combined-oids))
-	 (union (ab-union combineds)))
-    (nabu-page "Compare combineds"
-      (:div (dolist (name combined-oids)
-	      (htm ({active} ("default" :size "sm") (format nil "/tbl?oid=~a" name) (str name)) " ")))
-      :hr
-      ((:table :class "table table-hover table-bordered")
-       (:thead
-	(:tr
-	 (:th " ")
-	 (dolist (name combined-names)
-	   (htm (:th (str name))))))
-       (:tbody
-	(dolist (char union)
-	  (htm (:tr
-		(:td (str char))
-		(dolist (combined combineds)
-		  (htm (:td
-			(dolist (img (gethash char (cmb-ab combined)))
-			  (htm (:img :src img))))))))))))))
+  (let ((request-oids (get-checked-parameters)))
+    (bind (((:values combineds oids+names)
+	    (let@ rec ((oids request-oids)
+		       (combineds)
+		       (oids+names))
+	      (if oids
+		  (let ((oid (first oids)))
+		    (if-let (combined (gethash oid *combineds*))
+		      (rec (rest oids)
+			   (cons combined combineds)
+			   (cons (list oid (cmb-name combined)) oids+names))
+		      (rec (rest oids) combineds oids+names)))
+		  (values (reverse combineds) (reverse oids+names)))))
+	   (union (ab-union combineds)))
+      (nabu-page "Compare combineds"
+	(:div (dolist (oid+name oids+names)
+		(htm ({active} ("default" :size "sm") (format nil "/tbl?oid=~a" (urlencode (first oid+name))) (str (second oid+name))) " ")))
+	:hr
+	((:table :class "table table-hover table-bordered")
+	 (:thead
+	  (:tr
+	   (:th " ")
+	   (dolist (oid+name oids+names)
+	     (htm (:th (str (second oid+name)))))))
+	 (:tbody
+	  (dolist (char union)
+	    (htm (:tr
+		  (:td (str char))
+		  (dolist (combined combineds)
+		    (htm (:td
+			  (dolist (img (gethash char (cmb-ab combined)))
+			    (htm (:img :src img)))))))))))))))
 
-(define-easy-handler (rm-combined :uri "/rm-tbl") (name redirect)
-  (if (remhash name *combineds*)
+(define-easy-handler (rm-combined :uri "/rm-tbl") (oid redirect)
+  (if-let (combined (gethash oid *combineds*))
+    (progn
+      (remhash oid *combineds*)
       (if redirect
-	  (redirect (format nil "/combineds?removed=~a" name))
-	  (nabu-page "Combined chart removed"
-	    ({alert} ("warning") (:code (str name)) "removed.")))
-      (combined-404 name)))
+	  (redirect (format nil "/combineds?removed=~a" (cmb-name combined)))
+	  (nabu-page "Chart removed"
+	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
+    (combined-404 oid)))
 
 (define-easy-handler (new-combined :uri "/new-tbl") ()
   (let ((ab (make-hash-table :test 'equal)))

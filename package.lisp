@@ -18,4 +18,5 @@
   (:use :common-lisp :alexandria :scheme :cl-ppcre :split-sequence :metabang-bind :who :hunchentoot
 	:cl-match)
   (:import-from :cl-fad #:pathname-as-file #:list-directory)
+  (:import-from :do-urlencode #:urlencode #:urldecode)
   (:nicknames :nabu))

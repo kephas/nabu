@@ -17,34 +17,22 @@
 (in-package :nothos.net/2014.05.nabu)
 
 
-(defun %checked-parameters (params)
-  (mapcan (lambda (param)
-	    (if (equal "on" (cdr param)) (list (car param))))
-	  params))
-
-(defun get-checked-parameters ()
-  (%checked-parameters (get-parameters*)))
-
-(defun post-checked-parameters ()
-  (%checked-parameters (post-parameters*)))
+(defclass <nabu> (caveman2:<app>)())
+(defparameter *app* (make-instance '<nabu>))
 
 
-(define-easy-handler (bootstrap-css :uri "/bootstrap.min.css") ()
-  (handle-static-file "/home/pierre/Development/nabu/bootstrap.min.css"))
+(defparameter *bad-default-shell* (make-instance 'shell))
+(shell-ensure *bad-default-shell* "combineds")
+(defparameter *combineds* (shell-object *bad-default-shell* "combineds"))
 
-(define-easy-handler (bootstrap-js :uri "/bootstrap.min.js") ()
-  (handle-static-file "/home/pierre/Development/nabu/bootstrap.min.js"))
-
-(define-easy-handler (sticky-tabs-js :uri "/sticky-tabs.js") ()
-  (handle-static-file "/home/pierre/Development/nabu/sticky-tabs.js"))
 
 (defmacro nabu-page (title &body body)
-  `(with-html-output-to-string (out)
+  `(with-html-output-to-string (out nil :indent t)
      (:html
       (:head
        (:title (fmt "NABU - ~a" ,title))
        (:meta :name "viewport" :content "width=device-width")
-       (:link :href "/bootstrap.min.css" :rel "stylesheet")
+       (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
        (:style :type "text/css" "body {margin: 4em 2em;}"))
       (:body
        ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
@@ -60,20 +48,20 @@
 	(:h1 (str ,title))
 	,@body
 	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
-	(:script :src "/bootstrap.min.js")
-	(:script :src "/sticky-tabs.js"))))))
+	(:script :src "/static/css/bootstrap.min.js")
+	(:script :src "/static/js/sticky-tabs.js"))))))
 
-(define-easy-handler (home :uri "/") ()
-  (redirect (if (zerop (hash-table-count *combineds*))
-		"/units" "/charts")))
+(defroute "/" ()
+  (redirect *response* (if (zerop (hash-table-count *combineds*))
+			   "/units" "/charts")))
 
-(defparameter +s-filter+ "s-filter")
+(defparameter +s-filter+ "S-FILTER")
 
 (defun filtering? ()
-  (get-parameter +s-filter+))
+  (query-parameter *request* +s-filter+))
 
 (defun filter-units (units)
-  (let ((query (if-let (s-filter (get-parameter +s-filter+))
+  (let ((query (if-let (s-filter (query-parameter *request* +s-filter+))
 		 (let ((sexpr (read-all-from-string s-filter)))
 		   (if (null sexpr)
 		       (constantly t)
@@ -81,7 +69,7 @@
 		 (constantly t))))
     (do-search query units)))
 
-(define-easy-handler (show-units :uri "/units") ()
+(defroute "/units" ()
   (nabu-page "Units"
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
@@ -91,38 +79,34 @@
 		  ({row}
 		    (:div (:label "Add filter:")))
 		  ({row}
-		    ({col} 8 10 (:input :class "form-control" :type "text" :name "s-filter"))
-		    ({col} 4 2 ({submit} "default" "Filter"))))))
+		    ({col} 8 10 (:input :class "form-control" :type "text" :name "S-FILTER"))
+		    ({col} 4 2 ({submit} ("default") "Filter"))))))
     (:hr)
-    (:form :role "form" :method "GET" :action "/units2cmb"
+    (:form :role "form" :method "POST" :action "/units2cmb"
 	   (:div :class "form-group"
 		 (dolist (ms (filter-units (shell-object *bad-default-shell* "units")))
 		   (htm
 		    ({row}
-		      ({col} 12 12 ({checkbox} (unit-name ms) (str (unit-name ms)))))))
+		      ({col} 12 12 ({checkbox} "UNITS[]" (unit-name ms) (str (unit-name ms)))))))
 		 ({row}
 		   ({col} 12 6
 		     (:div :class "input-group"
 			   (:label :class "input-group-addon" "Chart name:")
-			   (:input :class "form-control" :name "--NAME")))
+			   (:input :class "form-control" :name "NAME")))
 		   ({col} 4 6
-		     ({submit} "primary" "Combine units")))))
+		     ({submit} ("primary") "Combine units")))))
     (:hr)
     (:h2 "Add unit")
-    ((:form :role "form" :method "GET" :action "/addunit")
+    ((:form :role "form" :method "POST" :action "/addunit")
      ({row}
        ({col} 12 10
 	 (:div :class "input-group"
 	       (:label :class "input-group-addon" "URI ")
-	       (:input :class "form-control" :type "url" :name "uri")))
+	       (:input :class "form-control" :type "url" :name "URI")))
        ({col} 12 2
-	 ({submit} "primary" "Add"))))))
+	 ({submit} ("primary") "Add"))))))
 
-(defparameter *bad-default-shell* (make-instance 'shell))
-(shell-ensure *bad-default-shell* "combineds")
-(defparameter *combineds* (shell-object *bad-default-shell* "combineds"))
-
-(define-easy-handler (add-unit :uri "/addunit") (uri)
+(defroute ("/addunit" :method :POST) (&key uri)
   (let ((new (read-images-manifest uri)))
     (push new (shell-object *bad-default-shell* "units"))
     (setf (shell-object *bad-default-shell* "combineds" (make-oid))
@@ -130,31 +114,32 @@
     (nabu-page "Unit added"
       (:p (str (unit-name new))))))
 
-(define-easy-handler (show-combineds :uri "/charts") (removed)
+(defroute "/charts" (&key removed)
   (nabu-page "Charts"
     (when removed
       (htm ({alert} ("warning" t) "Combined chart " (str removed) " removed")))
     (:form :role "form" :method "GET" :action "/compare"
 	   (maphash (lambda (oid chart)
-		      ({checkbox} oid
-			({active} ("default" :size "lg") (format nil "/chart?oid=~a" (urlencode oid)) (str (cmb-name chart)))
-			" " ({active} ("warning" :size "sm") (format nil "/edit-chart?oid=~a" (urlencode oid)) "Edit")
-			" " ({active} ("danger" :size "sm") (format nil "/rm-chart?oid=~a&redirect=t" (urlencode oid)) "Remove")))
+		      ({col} 12 12
+			({checkbox*} "OIDS[]" oid
+			  ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
+			  " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
+			  " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove"))))
 		    *combineds*)
 	   (unless (zerop (hash-table-count *combineds*))
-	     (htm ({submit} "primary" "Compare charts"))))))
+	     (htm ({submit} ("primary") "Compare charts"))))))
 
 
-(define-easy-handler (units2cmb :uri "/units2cmb") ()
-  (let ((combined (make-combined (get-parameter "--NAME")
+(defroute ("/units2cmb" :method :POST) (&key name _parsed)
+  (let ((combined (make-combined name
 			   (mapcan (lambda (name)
 				     (if-let (ms (find name (shell-object *bad-default-shell* "units") :key #'unit-name :test #'equal))
 				       (list ms)))
-				   (get-checked-parameters))))
+				   (getf _parsed :units))))
 	(oid (make-oid)))
     (setf (gethash oid *combineds*) combined)
     (nabu-page "New combined chart"
-      (let ((url (format nil "/chart?oid=~a" (urlencode oid))))
+      (let ((url (format nil "/chart?OID=~a" (urlencode oid))))
 	(htm (:a :href url (str (cmb-name combined))))))))
 
 (defun glyph-url (glyph)
@@ -167,12 +152,12 @@
   (nabu-page "Chart not found"
     ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 
-(define-easy-handler  (show-chart :uri "/chart") (oid)
+(defroute "/chart" (&key oid)
   (if-let (combined (gethash oid *combineds*))
     (progn
       (nabu-page (cmb-name combined)
-	({row} ({active} ("warning") (format nil "/edit-chart?oid=~a" (urlencode oid)) "Edit") " "
-	       ({active} ("danger") (format nil "/rm-chart?oid=~a" (urlencode oid)) "Remove"))
+	({row} ({active} ("warning") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit") " "
+	       ({active} ("danger") (format nil "/rm-chart?OID=~a" (urlencode oid)) "Remove"))
 	:hr
 	({row}
 	  (:table :class "table table-hover"
@@ -186,8 +171,8 @@
     (progn
       (combined-404 oid))))
 
-(define-easy-handler (compare-combineds :uri "/compare") ()
-  (let ((request-oids (get-checked-parameters)))
+(defroute "/compare" (&key _parsed)
+  (let ((request-oids (getf _parsed :oids)))
     (bind (((:values combineds oids+names)
 	    (let@ rec ((oids request-oids)
 		       (combineds)
@@ -203,7 +188,7 @@
 	   (union (ab-union combineds)))
       (nabu-page "Comparative chart"
 	(:div (dolist (oid+name oids+names)
-		(htm ({active} ("default" :size "sm") (format nil "/chart?oid=~a" (urlencode (first oid+name))) (str (second oid+name))) " ")))
+		(htm ({active} ("default" :size "sm") (format nil "/chart?OID=~a" (urlencode (first oid+name))) (str (second oid+name))) " ")))
 	:hr
 	((:table :class "table table-hover table-bordered")
 	 (:thead
@@ -220,15 +205,20 @@
 			  (dolist (img (gethash char (cmb-ab combined)))
 			    (htm (:img :src img)))))))))))))))
 
-(define-easy-handler (rm-chart :uri "/rm-chart") (oid redirect)
+(defroute "/rm-chart" (&key oid redirect)
   (if-let (combined (gethash oid *combineds*))
     (progn
       (remhash oid *combineds*)
       (if redirect
-	  (redirect (format nil "/charts?removed=~a" (cmb-name combined)))
+	  (redirect *response* (format nil "/charts?REMOVED=~a" (cmb-name combined)))
 	  (nabu-page "Chart removed"
 	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
     (combined-404 oid)))
 
-(defun web-start (port)
-  (start (make-instance 'easy-acceptor :port port)))
+(defun clackup (port)
+  (clack:clackup
+   (clack.builder:builder
+    (clack.middleware.static:<clack-middleware-static>
+     :path "/static/"
+     :root (merge-pathnames #p"static/" (asdf:system-source-directory "nabu")))
+    *app*) :port port))

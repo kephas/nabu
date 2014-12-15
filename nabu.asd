@@ -8,8 +8,8 @@
   :version "0.1"
   :author "Pierre Thierry <pierre@nothos.net>"
   :licence "AGPL"
-  :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "hunchentoot" "drakma"
-			"hu.dwim.stefil" "cl-match" "cl-base64" "uuid" "do-urlencode")
+  :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "drakma"
+			"hu.dwim.stefil" "cl-match" "cl-base64" "uuid" "do-urlencode" "caveman2")
   :components ((:file "package")
 	       (:file "misc")
 	       (:file "tag")

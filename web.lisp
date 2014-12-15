@@ -61,13 +61,15 @@
   (query-parameter *request* +s-filter+))
 
 (defun filter-units (units)
-  (let ((query (if-let (s-filter (query-parameter *request* +s-filter+))
-		 (let ((sexpr (read-all-from-string s-filter)))
-		   (if (null sexpr)
-		       (constantly t)
-		       ($sexpr sexpr)))
-		 (constantly t))))
-    (do-search query units)))
+  (handler-case
+      (let ((query (if-let (s-filter (query-parameter *request* +s-filter+))
+		     (let ((sexpr (read-all-from-string s-filter)))
+		       (if (null sexpr)
+			   (constantly t)
+			   ($sexpr sexpr)))
+		     (constantly t))))
+	(do-search query units))
+    (error ())))
 
 (defroute "/units" ()
   (nabu-page "Units"

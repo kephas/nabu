@@ -123,7 +123,7 @@
     (:form :role "form" :method "GET" :action "/compare"
 	   (maphash (lambda (oid chart)
 		      ({col} 12 12
-			({checkbox*} "OIDS[]" oid
+			({checkbox} "OIDS[]" oid
 			  ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
 			  " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
 			  " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove"))))

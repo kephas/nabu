@@ -55,7 +55,7 @@
 	 ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
 	  ((:ul :class "nav navbar-nav")
 	   (:li (:a :href "/units" "Units"))
-	   (:li (:a :href "/combineds" "Charts"))))))
+	   (:li (:a :href "/charts" "Charts"))))))
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body
@@ -65,7 +65,7 @@
 
 (define-easy-handler (home :uri "/") ()
   (redirect (if (zerop (hash-table-count *combineds*))
-		"/units" "/combineds")))
+		"/units" "/charts")))
 
 (defparameter +s-filter+ "s-filter")
 
@@ -94,7 +94,7 @@
 		    ({col} 8 10 (:input :class "form-control" :type "text" :name "s-filter"))
 		    ({col} 4 2 ({submit} "default" "Filter"))))))
     (:hr)
-    (:form :role "form" :method "GET" :action "/units2tbl"
+    (:form :role "form" :method "GET" :action "/units2cmb"
 	   (:div :class "form-group"
 		 (dolist (ms (filter-units (shell-object *bad-default-shell* "units")))
 		   (htm
@@ -130,22 +130,22 @@
     (nabu-page "Unit added"
       (:p (str (unit-name new))))))
 
-(define-easy-handler (show-combineds :uri "/combineds") (removed)
-  (nabu-page "Combineds"
+(define-easy-handler (show-combineds :uri "/charts") (removed)
+  (nabu-page "Charts"
     (when removed
       (htm ({alert} ("warning" t) "Combined chart " (str removed) " removed")))
     (:form :role "form" :method "GET" :action "/compare"
 	   (maphash (lambda (oid chart)
 		      ({checkbox} oid
-			({active} ("default" :size "lg") (format nil "/tbl?oid=~a" (urlencode oid)) (str (cmb-name chart)))
-			" " ({active} ("warning" :size "sm") (format nil "/edit-tbl?oid=~a" (urlencode oid)) "Edit")
-			" " ({active} ("danger" :size "sm") (format nil "/rm-tbl?oid=~a&redirect=t" (urlencode oid)) "Remove")))
+			({active} ("default" :size "lg") (format nil "/chart?oid=~a" (urlencode oid)) (str (cmb-name chart)))
+			" " ({active} ("warning" :size "sm") (format nil "/edit-chart?oid=~a" (urlencode oid)) "Edit")
+			" " ({active} ("danger" :size "sm") (format nil "/rm-chart?oid=~a&redirect=t" (urlencode oid)) "Remove")))
 		    *combineds*)
 	   (unless (zerop (hash-table-count *combineds*))
-	     (htm ({submit} "primary" "Compare combineds"))))))
+	     (htm ({submit} "primary" "Compare charts"))))))
 
 
-(define-easy-handler (units2tbl :uri "/units2tbl") ()
+(define-easy-handler (units2cmb :uri "/units2cmb") ()
   (let ((combined (make-combined (get-parameter "--NAME")
 			   (mapcan (lambda (name)
 				     (if-let (ms (find name (shell-object *bad-default-shell* "units") :key #'unit-name :test #'equal))
@@ -154,7 +154,7 @@
 	(oid (make-oid)))
     (setf (gethash oid *combineds*) combined)
     (nabu-page "New combined chart"
-      (let ((url (format nil "/tbl?oid=~a" (urlencode oid))))
+      (let ((url (format nil "/chart?oid=~a" (urlencode oid))))
 	(htm (:a :href url (str (cmb-name combined))))))))
 
 (defun glyph-url (glyph)
@@ -167,12 +167,12 @@
   (nabu-page "Chart not found"
     ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 
-(define-easy-handler  (show-combined :uri "/tbl") (oid)
+(define-easy-handler  (show-chart :uri "/chart") (oid)
   (if-let (combined (gethash oid *combineds*))
     (progn
       (nabu-page (cmb-name combined)
-	({row} ({active} ("warning") (format nil "/edit-tbl?oid=~a" (urlencode oid)) "Edit") " "
-	       ({active} ("danger") (format nil "/rm-tbl?oid=~a" (urlencode oid)) "Remove"))
+	({row} ({active} ("warning") (format nil "/edit-chart?oid=~a" (urlencode oid)) "Edit") " "
+	       ({active} ("danger") (format nil "/rm-chart?oid=~a" (urlencode oid)) "Remove"))
 	:hr
 	({row}
 	  (:table :class "table table-hover"
@@ -201,9 +201,9 @@
 		      (rec (rest oids) combineds oids+names)))
 		  (values (reverse combineds) (reverse oids+names)))))
 	   (union (ab-union combineds)))
-      (nabu-page "Compare combineds"
+      (nabu-page "Comparative chart"
 	(:div (dolist (oid+name oids+names)
-		(htm ({active} ("default" :size "sm") (format nil "/tbl?oid=~a" (urlencode (first oid+name))) (str (second oid+name))) " ")))
+		(htm ({active} ("default" :size "sm") (format nil "/chart?oid=~a" (urlencode (first oid+name))) (str (second oid+name))) " ")))
 	:hr
 	((:table :class "table table-hover table-bordered")
 	 (:thead
@@ -220,12 +220,12 @@
 			  (dolist (img (gethash char (cmb-ab combined)))
 			    (htm (:img :src img)))))))))))))))
 
-(define-easy-handler (rm-combined :uri "/rm-tbl") (oid redirect)
+(define-easy-handler (rm-chart :uri "/rm-chart") (oid redirect)
   (if-let (combined (gethash oid *combineds*))
     (progn
       (remhash oid *combineds*)
       (if redirect
-	  (redirect (format nil "/combineds?removed=~a" (cmb-name combined)))
+	  (redirect (format nil "/charts?removed=~a" (cmb-name combined)))
 	  (nabu-page "Chart removed"
 	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
     (combined-404 oid)))

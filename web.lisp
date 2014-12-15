@@ -16,8 +16,6 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-(defvar *units* nil)
-
 
 (defun %checked-parameters (params)
   (mapcan (lambda (param)
@@ -98,7 +96,7 @@
     (:hr)
     (:form :role "form" :method "GET" :action "/units2tbl"
 	   (:div :class "form-group"
-		 (dolist (ms (filter-units *units*))
+		 (dolist (ms (filter-units (shell-object *bad-default-shell* "units")))
 		   (htm
 		    ({row}
 		      ({col} 12 12 ({checkbox} (unit-name ms) (str (unit-name ms)))))))
@@ -120,13 +118,17 @@
        ({col} 12 2
 	 ({submit} "primary" "Add"))))))
 
+(defparameter *bad-default-shell* (make-instance 'shell))
+(shell-ensure *bad-default-shell* "combineds")
+(defparameter *combineds* (shell-object *bad-default-shell* "combineds"))
+
 (define-easy-handler (add-unit :uri "/addunit") (uri)
   (let ((new (read-images-manifest uri)))
-    (push new *units*)
+    (push new (shell-object *bad-default-shell* "units"))
+    (setf (shell-object *bad-default-shell* "combineds" (unit-name new))
+	  (make-combined (unit-name new) (list new)))
     (nabu-page "Unit added"
       (:p (str (unit-name new))))))
-
-(defparameter *combineds* (make-hash-table :test 'equal))
 
 (define-easy-handler (show-combineds :uri "/combineds") (removed)
   (nabu-page "Combineds"
@@ -146,7 +148,7 @@
 (define-easy-handler (units2tbl :uri "/units2tbl") ()
   (let ((combined (make-combined (get-parameter "--NAME")
 			   (mapcan (lambda (name)
-				     (if-let (ms (find name *units* :key #'unit-name :test #'equal))
+				     (if-let (ms (find name (shell-object *bad-default-shell* "units") :key #'unit-name :test #'equal))
 				       (list ms)))
 				   (get-checked-parameters)))))
     (setf (gethash (cmb-name combined) *combineds*) combined)

@@ -76,6 +76,16 @@
   ((containers :initarg :cnt))
   (:default-initargs :cnt (make-hash-table :test 'equal)))
 
+(defpclass ele-shell (shell)
+  ()
+  (:default-initargs :cnt (make-btree)))
+
+
+(defgeneric %get-shell-value (shell context key))
+(defgeneric %set-shell-value (shell context key value))
+(defgeneric %rm-shell-value (shell context key))
+(defgeneric %make-shell-container (shell))
+
 (define-condition shell-path-not-traversable (error)
   ((shell :initarg :shell)
    (path :initarg :path))
@@ -96,15 +106,15 @@
 	       (path path))
       (if (null path)
 	  object
-	  (rec (gethash (first path) object) (rest path))))))
+	  (rec (%get-shell-value shell object (first path)) (rest path))))))
 
 (defun (setf shell-object) (value shell &rest path)
   (with-path-error shell path
     (let@ rec ((object (slot-value shell 'containers))
 	       (path path))
       (if (= 1 (length path))
-	  (setf (gethash (first path) object) value)
-	  (rec (gethash (first path) object) (rest path))))))
+	  (%set-shell-value shell object (first path) value)
+	  (rec (%get-shell-value shell object (first path)) (rest path))))))
 
 (defun shell-ensure (shell &rest path)
   "Ensure that a shell path designates a container"
@@ -112,7 +122,38 @@
     (let@ rec ((object (slot-value shell 'containers))
 	       (path path))
       (when path
-	(bind (((:values _ found?) (gethash (first path) object)))
+	(bind (((:values _ found?) (%get-shell-value shell object (first path))))
 	  (unless found?
-	    (setf (gethash (first path) object) (make-hash-table :test 'equal)))
-	  (rec (gethash (first path) object) (rest path)))))))
+	    (break)
+	    (%set-shell-value shell object (first path) (%make-shell-container shell)))
+	  (rec (%get-shell-value shell object (first path)) (rest path)))))))
+
+
+#| In-memory shell |#
+
+(defmethod %get-shell-value ((shell shell) context key)
+  (gethash key context))
+
+(defmethod %set-shell-value ((shell shell) context key value)
+  (setf (gethash key context) value))
+
+(defmethod %rm-shell-value ((shell shell) context key)
+  (remhash key context))
+
+(defmethod %make-shell-container ((shell shell))
+  (make-hash-table :test 'equal))
+
+
+#| Persistent shell |#
+
+(defmethod %get-shell-value ((shell ele-shell) context key)
+  (values (ele:get-value key context)) (ele:existsp key context))
+
+(defmethod %set-shell-value ((shell ele-shell) context key value)
+  (setf (ele:get-value key context) value))
+
+(defmethod %rm-shell-value ((shell ele-shell) context key)
+  (remove-kv key context))
+
+(defmethod %make-shell-container ((shell ele-shell))
+  (ele:make-btree))

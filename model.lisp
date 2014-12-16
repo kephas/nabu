@@ -85,6 +85,9 @@
 (defgeneric %set-shell-value (shell context key value))
 (defgeneric %rm-shell-value (shell context key))
 (defgeneric %make-shell-container (shell))
+(defgeneric %shell-container-count (shell context))
+(defgeneric %map-shell-container (shell context function))
+(defgeneric %shell-container? (shell value))
 
 (define-condition shell-path-not-traversable (error)
   ((shell :initarg :shell)
@@ -136,6 +139,14 @@
 		  (lambda (context key)
 		    (%rm-shell-value shell context key))))
 
+(defun shell-count (shell &rest path)
+  "Count the objects in a shell container"
+  (%shell-container-count shell (apply #'shell-object (cons shell path))))
+
+(defun shell-map (shell function &rest path)
+  "Apply a function to all objects in a shell container"
+  (%map-shell-container shell (shell-object shell path) function))
+
 
 #| In-memory shell |#
 
@@ -151,6 +162,15 @@
 (defmethod %make-shell-container ((shell shell))
   (make-hash-table :test 'equal))
 
+(defmethod %shell-container-count ((shell shell) context)
+  (hash-table-count context))
+
+(defmethod %map-shell-container ((shell shell) context function)
+  (maphash function context))
+
+(defmethod %shell-container? ((shell shell) value)
+  (typep value 'hash-table))
+
 
 #| Persistent shell |#
 
@@ -165,3 +185,17 @@
 
 (defmethod %make-shell-container ((shell ele-shell))
   (ele:make-btree))
+
+(defmethod %shell-container-count ((shell ele-shell) context)
+  (let ((count 0))
+    (ele:map-btree (lambda (k v)
+		     (declare (ignore k v))
+		     (incf count))
+		   context)
+    count))
+
+(defmethod %map-shell-container ((shell ele-shell) context function)
+  (map-btree function context))
+
+(defmethod %shell-container? ((shell ele-shell) value)
+  (typep value 'ele:btree))

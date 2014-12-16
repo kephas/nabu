@@ -45,3 +45,33 @@
 
 (defun tui-search (query objects)
   (tui-list (do-search query objects)))
+
+
+(defgeneric %map-shell-container (shell context function))
+(defgeneric %shell-container? (shell value))
+
+(defun tui-shell-list (shell &optional (path))
+  (with-path-error shell path
+    (let@ rec ((object (slot-value shell 'containers))
+	       (path path))
+      (format *query-io* "~:[~;~1:*~{/~a~}~]" path)
+      (if (%shell-container? shell object)
+	  (progn
+	    (format *query-io* "/~%")
+	    (%map-shell-container shell object (lambda (k v)
+						 (rec v (append path (list k))))))
+	  (format *query-io* " = ~s~%" object)))))
+
+
+(defmethod %map-shell-container ((shell shell) context function)
+  (maphash function context))
+
+(defmethod %shell-container? ((shell shell) value)
+  (typep value 'hash-table))
+
+
+(defmethod %map-shell-container ((shell ele-shell) context function)
+  (map-btree function context))
+
+(defmethod %shell-container? ((shell ele-shell) value)
+  (typep value 'ele:btree))

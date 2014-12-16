@@ -56,8 +56,8 @@
 (in-suite all)
 (defsuite* shell)
 
-(deftest path ()
-  (let ((shell (make-instance 'nabu::shell)))
+(deftest path (&optional (class 'nabu::shell))
+  (let ((shell (make-instance class)))
     (nabu::shell-ensure shell "foo" "bar")
     (setf (nabu::shell-object shell "foo" "baz") 1)
     (is (not (nabu::shell-object shell "foo" "fubar")))

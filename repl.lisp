@@ -47,7 +47,7 @@
   (tui-list (do-search query objects)))
 
 
-(defun tui-shell-list (shell &optional (path))
+(defun tui-shell-list (shell &optional path)
   (with-path-error shell path
     (let@ rec ((object (slot-value shell 'containers))
 	       (path path))

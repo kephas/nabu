@@ -100,21 +100,23 @@
        (type-error ()
 	 (error (make-condition 'shell-path-not-traversable :shell ,shell :path ,path))))))
 
-(defun shell-object (shell &rest path)
-  (with-path-error shell path
-    (let@ rec ((object (slot-value shell 'containers))
-	       (path path))
-      (if (null path)
-	  object
-	  (rec (%get-shell-value shell object (first path)) (rest path))))))
-
-(defun (setf shell-object) (value shell &rest path)
+(defun %do-shell-path (shell path thunk)
   (with-path-error shell path
     (let@ rec ((object (slot-value shell 'containers))
 	       (path path))
       (if (= 1 (length path))
-	  (%set-shell-value shell object (first path) value)
+	  (funcall thunk object (first path))
 	  (rec (%get-shell-value shell object (first path)) (rest path))))))
+
+(defun shell-object (shell &rest path)
+  (%do-shell-path shell path
+		  (lambda (context key)
+		    (%get-shell-value shell context key))))
+
+(defun (setf shell-object) (value shell &rest path)
+  (%do-shell-path shell path
+		  (lambda (context key)
+		    (%set-shell-value shell context key value))))
 
 (defun shell-ensure (shell &rest path)
   "Ensure that a shell path designates a container"
@@ -127,6 +129,12 @@
 	    (break)
 	    (%set-shell-value shell object (first path) (%make-shell-container shell)))
 	  (rec (%get-shell-value shell object (first path)) (rest path)))))))
+
+(defun shell-remove (shell &rest path)
+  "Remove an entry from a shell"
+  (%do-shell-path shell path
+		  (lambda (context key)
+		    (%rm-shell-value shell context key))))
 
 
 #| In-memory shell |#

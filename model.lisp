@@ -77,7 +77,7 @@
   (:default-initargs :cnt (make-hash-table :test 'equal)))
 
 (ele:defpclass ele-shell (shell)
-  ()
+  ((containers :initarg :cnt))
   (:default-initargs :cnt (ele:make-btree)))
 
 
@@ -112,9 +112,11 @@
 	  (rec (%get-shell-value shell object (first path)) (rest path))))))
 
 (defun shell-object (shell &rest path)
-  (%do-shell-path shell path
-		  (lambda (context key)
-		    (%get-shell-value shell context key))))
+  (if path
+      (%do-shell-path shell path
+		      (lambda (context key)
+			(%get-shell-value shell context key)))
+      (slot-value shell 'containers)))
 
 (defun (setf shell-object) (value shell &rest path)
   (%do-shell-path shell path
@@ -129,7 +131,6 @@
       (when path
 	(bind (((:values _ found?) (%get-shell-value shell object (first path))))
 	  (unless found?
-	    (break)
 	    (%set-shell-value shell object (first path) (%make-shell-container shell)))
 	  (rec (%get-shell-value shell object (first path)) (rest path)))))))
 
@@ -181,7 +182,7 @@
   (setf (ele:get-value key context) value))
 
 (defmethod %rm-shell-value ((shell ele-shell) context key)
-  (remove-kv key context))
+  (ele:remove-kv key context))
 
 (defmethod %make-shell-container ((shell ele-shell))
   (ele:make-btree))
@@ -195,7 +196,7 @@
     count))
 
 (defmethod %map-shell-container ((shell ele-shell) context function)
-  (map-btree function context))
+  (ele:map-btree function context))
 
 (defmethod %shell-container? ((shell ele-shell) value)
   (typep value 'ele:btree))

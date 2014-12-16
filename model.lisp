@@ -100,7 +100,7 @@
   (once-only (shell path)
     `(handler-case
 	 (progn ,@body)
-       (type-error ()
+       (error ()
 	 (error (make-condition 'shell-path-not-traversable :shell ,shell :path ,path))))))
 
 (defun %do-shell-path (shell path thunk)
@@ -145,7 +145,7 @@
 
 (defun shell-map (shell function &rest path)
   "Apply a function to all objects in a shell container"
-  (%map-shell-container shell (shell-object shell path) function))
+  (%map-shell-container shell (apply #'shell-object (cons shell path)) function))
 
 
 #| In-memory shell |#

@@ -155,7 +155,7 @@
 #| Persistent shell |#
 
 (defmethod %get-shell-value ((shell ele-shell) context key)
-  (values (ele:get-value key context)) (ele:existsp key context))
+  (ele:get-value key context))
 
 (defmethod %set-shell-value ((shell ele-shell) context key value)
   (setf (ele:get-value key context) value))

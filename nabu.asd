@@ -9,8 +9,10 @@
   :author "Pierre Thierry <pierre@nothos.net>"
   :licence "AGPL"
   :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "drakma"
-			"hu.dwim.stefil" "cl-match" "cl-base64" "uuid" "do-urlencode" "caveman2")
+			"hu.dwim.stefil" "cl-match" "cl-base64" "uuid" "do-urlencode" "caveman2" "elephant"
+			"envy")
   :components ((:file "package")
+	       (:file "config")
 	       (:file "misc")
 	       (:file "tag")
 	       (:file "model")

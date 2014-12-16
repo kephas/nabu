@@ -76,9 +76,9 @@
   ((containers :initarg :cnt))
   (:default-initargs :cnt (make-hash-table :test 'equal)))
 
-(defpclass ele-shell (shell)
+(ele:defpclass ele-shell (shell)
   ()
-  (:default-initargs :cnt (make-btree)))
+  (:default-initargs :cnt (ele:make-btree)))
 
 
 (defgeneric %get-shell-value (shell context key))

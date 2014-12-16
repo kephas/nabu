@@ -1,5 +1,5 @@
  #| NABU - Prototype palaeographic chart builder
-    Copyright (C) 2013 Pierre Thierry <pierre@nothos.net>
+    Copyright (C) 2014 Pierre Thierry <pierre@nothos.net>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -14,12 +14,18 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. |#
 
-(defpackage :nothos.net/2014.05.nabu
-  (:use :common-lisp :alexandria :scheme :cl-ppcre :split-sequence :metabang-bind :who
-	:cl-match :envy)
-  (:import-from :cl-fad #:pathname-as-file #:list-directory)
-  (:import-from :do-urlencode #:urlencode #:urldecode)
-  (:import-from :caveman2 #:defroute #:*request* #:*response*)
-  (:import-from #:clack.request #:query-parameter)
-  (:import-from #:clack.response #:redirect)
-  (:nicknames :nabu))
+(in-package :nothos.net/2014.05.nabu)
+
+(setf (config-env-var) "NABU")
+
+(defun config* (&optional key)
+  (config (package-name *package*) key))
+
+
+(defconfig dev
+    `(:storage :elephant
+      :ele-store (:clsql (:sqlite3 ,(merge-pathnames #p"nabu.sqlite"
+						     (asdf:component-pathname (asdf:find-system "nabu")))))))
+
+(defconfig no-db
+    '(:storage :memory))

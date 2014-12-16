@@ -21,10 +21,19 @@
 (defparameter *app* (make-instance '<nabu>))
 
 
-(defparameter *bad-default-shell* (make-instance 'shell))
-(shell-ensure *bad-default-shell* "combineds")
-(defparameter *combineds* (shell-object *bad-default-shell* "combineds"))
+(defvar *bad-default-shell* nil)
 
+(defun open-storage ()
+  (case (config* :storage)
+    (:memory
+     (setf *bad-default-shell* (make-instance 'shell)))
+    (:elephant
+     (ele:open-store (config* :ele-store))
+     (let ((shell (ele:get-from-root "bad-default-shell")))
+       (unless shell
+	 (setf shell (make-instance 'ele-shell))
+	 (add-to-root "bad-default-shell" shell))
+       (setf *bad-default-shell* shell)))))
 
 (defmacro nabu-page (title &body body)
   `(with-html-output-to-string (out nil :indent t)
@@ -52,7 +61,7 @@
 	(:script :src "/static/js/sticky-tabs.js"))))))
 
 (defroute "/" ()
-  (redirect *response* (if (zerop (hash-table-count *combineds*))
+  (redirect *response* (if (zerop (shell-count *bad-default-shell* "combineds"))
 			   "/units" "/charts")))
 
 (defparameter +s-filter+ "S-FILTER")
@@ -121,14 +130,15 @@
     (when removed
       (htm ({alert} ("warning" t) "Combined chart " (str removed) " removed")))
     (:form :role "form" :method "GET" :action "/compare"
-	   (maphash (lambda (oid chart)
-		      ({col} 12 12
-			({checkbox} "OIDS[]" oid
-			  ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
-			  " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
-			  " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove"))))
-		    *combineds*)
-	   (unless (zerop (hash-table-count *combineds*))
+	   (shell-map *bad-default-shell*
+		      (lambda (oid chart)
+			({col} 12 12
+			  ({checkbox} "OIDS[]" oid
+			    ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
+			    " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
+			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove"))))
+		      "combineds")
+	   (unless (zerop (shell-count *bad-default-shell* "combineds"))
 	     (htm ({submit} ("primary") "Compare charts"))))))
 
 
@@ -139,7 +149,7 @@
 				       (list ms)))
 				   (getf _parsed :units))))
 	(oid (make-oid)))
-    (setf (gethash oid *combineds*) combined)
+    (setf (shell-object *bad-default-shell* "combineds" oid) combined)
     (nabu-page "New combined chart"
       (let ((url (format nil "/chart?OID=~a" (urlencode oid))))
 	(htm (:a :href url (str (cmb-name combined))))))))
@@ -155,7 +165,7 @@
     ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 
 (defroute "/chart" (&key oid)
-  (if-let (combined (gethash oid *combineds*))
+  (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
     (progn
       (nabu-page (cmb-name combined)
 	({row} ({active} ("warning") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit") " "
@@ -181,7 +191,7 @@
 		       (oids+names))
 	      (if oids
 		  (let ((oid (first oids)))
-		    (if-let (combined (gethash oid *combineds*))
+		    (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
 		      (rec (rest oids)
 			   (cons combined combineds)
 			   (cons (list oid (cmb-name combined)) oids+names))
@@ -208,9 +218,9 @@
 			    (htm (:img :src img)))))))))))))))
 
 (defroute "/rm-chart" (&key oid redirect)
-  (if-let (combined (gethash oid *combineds*))
+  (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
     (progn
-      (remhash oid *combineds*)
+      (shell-remove *bad-default-shell* "combineds" oid)
       (if redirect
 	  (redirect *response* (format nil "/charts?REMOVED=~a" (cmb-name combined)))
 	  (nabu-page "Chart removed"
@@ -218,6 +228,8 @@
     (combined-404 oid)))
 
 (defun clackup (port)
+  (open-storage)
+  (shell-ensure *bad-default-shell* "combineds")
   (clack:clackup
    (clack.builder:builder
     (clack.middleware.static:<clack-middleware-static>

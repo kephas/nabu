@@ -88,7 +88,7 @@
 	  (let ((name (unit-name (shell-object *bad-default-shell* "units" created))))
 	    ({alert} ("success" t) "Unit " (str name) " created."))
 	(error ()
-	  ({alert} ("danger" t) "Error creating unit " (:code (str created))))))
+	  ({alert} ("danger" t) "Error after creation of unit " (:code (str created))))))
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))

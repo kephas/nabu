@@ -32,7 +32,7 @@
      (let ((shell (ele:get-from-root "bad-default-shell")))
        (unless shell
 	 (setf shell (make-instance 'ele-shell))
-	 (add-to-root "bad-default-shell" shell))
+	 (ele:add-to-root "bad-default-shell" shell))
        (setf *bad-default-shell* shell)))))
 
 (defmacro nabu-page (title &body body)

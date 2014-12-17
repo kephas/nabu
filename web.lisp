@@ -69,7 +69,7 @@
 (defun filtering? ()
   (query-parameter *request* +s-filter+))
 
-(defun filter-units (units)
+(defun filter-units (oid+units)
   (handler-case
       (let ((query (if-let (s-filter (query-parameter *request* +s-filter+))
 		     (let ((sexpr (read-all-from-string s-filter)))
@@ -77,11 +77,17 @@
 			   (constantly t)
 			   ($sexpr sexpr)))
 		     (constantly t))))
-	(do-search query units))
+	(do-search query oid+units :key #'second))
     (error ())))
 
-(defroute "/units" ()
+(defroute "/units" (&key created)
   (nabu-page "Units"
+    (when created
+      (handler-case
+	  (let ((name (unit-name (shell-object *bad-default-shell* "units" created))))
+	    ({alert} ("success" t) "Unit " (str name) " created."))
+	(error ()
+	  ({alert} ("danger" t) "Error creating unit " (:code (str created))))))
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))
@@ -95,10 +101,11 @@
     (:hr)
     (:form :role "form" :method "POST" :action "/units2cmb"
 	   (:div :class "form-group"
-		 (dolist (ms (filter-units (shell-object *bad-default-shell* "units")))
+		 (dolist (oid+unit (filter-units (shell-list *bad-default-shell* "units")))
 		   (htm
 		    ({row}
-		      ({col} 12 12 ({checkbox} "UNITS[]" (unit-name ms) (str (unit-name ms)))))))
+		      ({col} 12 12 ({checkbox} "UNITS[]" (first oid+unit)
+				     (str (unit-name (second oid+unit))))))))
 		 ({row}
 		   ({col} 12 6
 		     (:div :class "input-group"
@@ -118,12 +125,12 @@
 	 ({submit} ("primary") "Add"))))))
 
 (defroute ("/addunit" :method :POST) (&key uri)
-  (let ((new (read-images-manifest uri)))
-    (push new (shell-object *bad-default-shell* "units"))
+  (let ((new (read-images-manifest uri))
+	(unit-oid (make-oid)))
+    (setf (shell-object *bad-default-shell* "units" unit-oid) new)
     (setf (shell-object *bad-default-shell* "combineds" (make-oid))
 	  (make-combined (unit-name new) (list new)))
-    (nabu-page "Unit added"
-      (:p (str (unit-name new))))))
+    (redirect *response* (format nil "/units?CREATED=~a" (urlencode unit-oid)))))
 
 (defroute "/charts" (&key removed)
   (nabu-page "Charts"
@@ -144,9 +151,9 @@
 
 (defroute ("/units2cmb" :method :POST) (&key name _parsed)
   (let ((combined (make-combined name
-			   (mapcan (lambda (name)
-				     (if-let (ms (find name (shell-object *bad-default-shell* "units") :key #'unit-name :test #'equal))
-				       (list ms)))
+			   (mapcan (lambda (oid)
+				     (if-let (unit (shell-object *bad-default-shell* "units" oid))
+				       (list unit)))
 				   (getf _parsed :units))))
 	(oid (make-oid)))
     (setf (shell-object *bad-default-shell* "combineds" oid) combined)
@@ -229,6 +236,7 @@
 
 (defun clackup (port)
   (open-storage)
+  (shell-ensure *bad-default-shell* "units")
   (shell-ensure *bad-default-shell* "combineds")
   (clack:clackup
    (clack.builder:builder

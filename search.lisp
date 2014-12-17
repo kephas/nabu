@@ -86,11 +86,11 @@
 (deftag $sexpr sexpr)
 (deftag $query-ast ast)
 
-(defun do-search (query objects)
+(defun do-search (query objects &key key)
   (let ((predicate (match query
 		     ((tag $sexpr sexpr)
 		      (make-search-matcher (sexp->query-ast sexpr)))
 		     ((tag $query-ast ast)
 		      (make-search-matcher ast))
 		     ((type function) query))))
-    (remove-if (complement predicate) objects)))
+    (remove-if (complement predicate) objects :key key)))

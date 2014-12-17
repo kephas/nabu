@@ -132,10 +132,17 @@
 	  (make-combined (unit-name new) (list new)))
     (redirect *response* (format nil "/units?CREATED=~a" (urlencode unit-oid)))))
 
-(defroute "/charts" (&key removed)
+(defroute "/charts" (&key created removed)
   (nabu-page "Charts"
     (when removed
-      (htm ({alert} ("warning" t) "Combined chart " (str removed) " removed")))
+      (htm ({alert} ("warning" t) "Chart " (str removed) " removed")))
+    (when created
+      (handler-case
+	  (let ((uri (format nil "/chart?OID=~a" (urlencode created)))
+		(name (cmb-name (shell-object *bad-default-shell* "combineds" created))))
+	    ({alert} ("success" t) "Combined chart " (:a :href uri (str name)) " created!"))
+	(error ()
+	  ({alert} ("danger" t) "Error after creation of chart " (:code (str created))))))
     (:form :role "form" :method "GET" :action "/compare"
 	   (map nil (lambda (oid+chart)
 		      (bind (((oid chart) oid+chart))
@@ -158,9 +165,7 @@
 			   :allow-unit nil))
 	(oid (make-oid)))
     (setf (shell-object *bad-default-shell* "combineds" oid) combined)
-    (nabu-page "New combined chart"
-      (let ((url (format nil "/chart?OID=~a" (urlencode oid))))
-	(htm (:a :href url (str (cmb-name combined))))))))
+    (redirect *response* (format nil "/charts?CREATED=~a" (urlencode oid)))))
 
 (defun glyph-url (glyph)
   (bind (((kind datum) (glyph-img glyph)))

@@ -210,10 +210,23 @@
 			   (cons (list oid (cmb-name combined)) oids+names))
 		      (rec (rest oids) combineds oids+names)))
 		  (values (reverse combineds) (reverse oids+names)))))
+	   (oids (mapcar #'first oids+names))
 	   (union (ab-union combineds)))
-      (nabu-page "Comparative chart"
-	(:div (dolist (oid+name oids+names)
-		(htm ({active} ("default" :size "sm") (format nil "/chart?OID=~a" (urlencode (first oid+name))) (str (second oid+name))) " ")))
+      (flet ((other-uri (oids)
+	       (format nil "/compare?~a" (oids->query "OIDS[]" oids))))
+	(nabu-page "Comparative chart"
+	  (:div
+	   (let@ rec ((oid (caar oids+names))
+		      (name (cadar oids+names))
+		      (next (cdr oids+names))
+		      (first t))
+	     (unless first
+	       ({active} ("default" :size "xs") (other-uri (swap-left oid oids)) "<"))
+	     (htm ({active} ("default" :size "sm") (format nil "/chart?OID=~a" (urlencode oid)) (str name)) " ")
+	     (when next
+	       ({active} ("default" :size "xs") (other-uri (swap-right oid oids)) ">")
+	       (htm "   ")
+	       (rec (caar next) (cadar next) (cdr next) nil))))
 	:hr
 	((:table :class "table table-hover table-bordered")
 	 (:thead
@@ -228,7 +241,7 @@
 		  (dolist (combined combineds)
 		    (htm (:td
 			  (dolist (img (gethash char (cmb-ab combined)))
-			    (htm (:img :src img)))))))))))))))
+			    (htm (:img :src img))))))))))))))))
 
 (defroute "/rm-chart" (&key oid redirect)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))

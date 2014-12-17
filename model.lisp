@@ -64,7 +64,7 @@
     (dolist (combined combineds)
       (dolist (entry (hash-table-keys (cmb-ab combined)))
 	(setf (gethash entry union) t)))
-    (sort (hash-table-keys union) #'string>)))
+    (sort (hash-table-keys union) #'string<)))
 
 (defun remove-used-unit-charts (charts &key key)
   "Remove from a list of charts all unit charts present in combined charts"

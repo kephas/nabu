@@ -31,6 +31,17 @@
   (is (equal '(nil 1 #\a "foo" -1 nil) (nabu::read-all-from-string "nil 1 #\\a \"foo\" -1 nil")))
   (is (not (nabu::read-all-from-string ""))))
 
+(deftest swap ()
+  (let ((list '(1 2 3 4 5 6)))
+    (is (equal list (nabu::swap-left 0 list)))
+    (is (equal list (nabu::swap-left 1 list)))
+    (is (equal '(2 1 3 4 5 6) (nabu::swap-left 2 list)))
+    (is (equal '(1 2 3 4 6 5) (nabu::swap-left 6 list)))
+    (is (equal list (nabu::swap-right 0 list)))
+    (is (equal '(2 1 3 4 5 6) (nabu::swap-right 1 list)))
+    (is (equal '(1 3 2 4 5 6) (nabu::swap-right 2 list)))
+    (is (equal list (nabu::swap-right 6 list)))))
+
 (in-suite all)
 (defsuite* date)
 

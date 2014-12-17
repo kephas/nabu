@@ -57,3 +57,31 @@
 
 (defun make-oid ()
   (base64:usb8-array-to-base64-string (uuid:uuid-to-byte-array (uuid:make-v4-uuid))))
+
+(defun swap-left (item list &key (test #'equal))
+  (with-lisp1 (test)
+    (if (< (length list) 2)
+	list
+	(let@ rec ((before)
+		   (previous (first list))
+		   (next (second list))
+		   (after (cddr list)))
+	  (if (test item next)
+	      (append (reverse before) (list next previous) after)
+	      (if after
+		  (rec (cons previous before) next (first after) (rest after))
+		  list))))))
+
+(defun swap-right (item list &key (test #'equal))
+  (with-lisp1 (test)
+    (if (< (length list) 2)
+	list
+	(let@ rec ((before)
+		   (previous (first list))
+		   (next (second list))
+		   (after (cddr list)))
+	  (if (test item previous)
+	      (append (reverse before) (list next previous) after)
+	      (if after
+		  (rec (cons previous before) next (first after) (rest after))
+		  list))))))

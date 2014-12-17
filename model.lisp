@@ -50,8 +50,8 @@
 
 (defclass unit-chart (combined) ())
 
-(defun make-combined (name units)
-  (make-instance (if (= 1 (length units)) 'unit-chart 'combined)
+(defun make-combined (name units &key (allow-unit t))
+  (make-instance (if (and allow-unit (= 1 (length units))) 'unit-chart 'combined)
 		 :name name :units units
 		 :ab (let ((combined (make-hash-table :test 'equal)))
 		       (dolist (unit units combined)
@@ -65,6 +65,18 @@
       (dolist (entry (hash-table-keys (cmb-ab combined)))
 	(setf (gethash entry union) t)))
     (sort (hash-table-keys union) #'string>)))
+
+(defun remove-used-unit-charts (charts &key key)
+  "Remove from a list of charts all unit charts present in combined charts"
+  (with-lisp1 (key)
+    (let ((used (mapcan #'cmb-units (remove-if (lambda (chart)
+						 (typep chart 'unit-chart))
+					       (mapcar key charts)))))
+      (mapcan (lambda (chart)
+		(unless (and (typep (key chart) 'unit-chart)
+			     (find (unit-name (first (cmb-units (key chart)))) used :key #'unit-name :test #'equal))
+		  (list chart)))
+	      charts))))
 
 
 #| Shell

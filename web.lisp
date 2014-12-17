@@ -137,14 +137,14 @@
     (when removed
       (htm ({alert} ("warning" t) "Combined chart " (str removed) " removed")))
     (:form :role "form" :method "GET" :action "/compare"
-	   (shell-map *bad-default-shell*
-		      (lambda (oid chart)
+	   (map nil (lambda (oid+chart)
+		      (bind (((oid chart) oid+chart))
 			({col} 12 12
 			  ({checkbox} "OIDS[]" oid
 			    ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
 			    " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
-			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove"))))
-		      "combineds")
+			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove")))))
+		(remove-used-unit-charts (shell-list *bad-default-shell* "combineds") :key #'second))
 	   (unless (zerop (shell-count *bad-default-shell* "combineds"))
 	     (htm ({submit} ("primary") "Compare charts"))))))
 
@@ -154,7 +154,8 @@
 			   (mapcan (lambda (oid)
 				     (if-let (unit (shell-object *bad-default-shell* "units" oid))
 				       (list unit)))
-				   (getf _parsed :units))))
+				   (getf _parsed :units))
+			   :allow-unit nil))
 	(oid (make-oid)))
     (setf (shell-object *bad-default-shell* "combineds" oid) combined)
     (nabu-page "New combined chart"

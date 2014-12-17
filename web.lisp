@@ -180,8 +180,10 @@
 
 (defmacro {glyph} (glyph)
   `(let ((uri (glyph-url ,glyph))
-	 (pos (format nil "~:[~;~1:*~{~a~a~}~]"
-		      (commatize (glyph-pos ,glyph) "."))))
+	 (pos (handler-case
+		  (format nil "~:[~;~1:*~{~a~a~}~]"
+			  (commatize (glyph-pos ,glyph) "."))
+		(error () ""))))
      (htm (:img :data-toggle "tooltip" :data-placement "right"
 		:title pos :src uri))))
 

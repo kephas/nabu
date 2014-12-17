@@ -112,11 +112,14 @@
 	  (rec (%get-shell-value shell object (first path)) (rest path))))))
 
 (defun shell-object (shell &rest path)
-  (if path
-      (%do-shell-path shell path
-		      (lambda (context key)
-			(%get-shell-value shell context key)))
-      (slot-value shell 'containers)))
+  (handler-case
+      (if path
+	  (%do-shell-path shell path
+			  (lambda (context key)
+			    (%get-shell-value shell context key)))
+	  (slot-value shell 'containers))
+    (error ()
+      (values nil nil))))
 
 (defun (setf shell-object) (value shell &rest path)
   (%do-shell-path shell path

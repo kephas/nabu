@@ -206,6 +206,9 @@
     (progn
       (combined-404 oid))))
 
+(defun oids->query (param oids)
+  (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))
+
 (defroute "/compare" (&key _parsed)
   (let ((request-oids (getf _parsed :oids)))
     (bind (((:values combineds oids+names)

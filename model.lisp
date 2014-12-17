@@ -148,6 +148,12 @@
   "Apply a function to all objects in a shell container"
   (%map-shell-container shell (apply #'shell-object (cons shell path)) function))
 
+(defun shell-list (shell &rest path)
+  "Return all key/object pairs contained in a shell container"
+  (let ((pairs))
+    (%map-shell-container shell (apply #'shell-object shell path) (lambda (k v) (push (list k v) pairs)))
+    (reverse pairs)))
+
 
 #| In-memory shell |#
 

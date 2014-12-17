@@ -165,9 +165,12 @@
 
 (defun shell-list (shell &rest path)
   "Return all key/object pairs contained in a shell container"
-  (let ((pairs))
-    (%map-shell-container shell (apply #'shell-object shell path) (lambda (k v) (push (list k v) pairs)))
-    (reverse pairs)))
+  (handler-case
+      (let ((pairs))
+	(%map-shell-container shell (apply #'shell-object shell path) (lambda (k v) (push (list k v) pairs)))
+	(reverse pairs))
+    (error ()
+      (values))))
 
 
 #| In-memory shell |#

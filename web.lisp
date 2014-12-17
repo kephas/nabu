@@ -178,6 +178,13 @@
   (nabu-page "Chart not found"
     ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 
+(defmacro {glyph} (glyph)
+  `(let ((uri (glyph-url ,glyph))
+	 (pos (format nil "~:[~;~1:*~{~a~a~}~]"
+		      (commatize (glyph-pos ,glyph) "."))))
+     (htm (:img :data-toggle "tooltip" :data-placement "right"
+		:title pos :src uri))))
+
 (defroute "/chart" (&key oid)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
     (progn
@@ -192,11 +199,7 @@
 				   (:td (str char))
 				   (:td
 				    (dolist (glyph glyphs)
-				      (let ((uri (glyph-url glyph))
-					    (pos (format nil "~:[~;~1:*~{~a~a~}~]"
-							 (commatize (glyph-pos glyph) "."))))
-					(htm (:img :data-toggle "tooltip" :data-placement "right"
-						   :title pos :src uri))))))))
+				      ({glyph} glyph))))))
 			   (cmb-ab combined))))))
     (progn
       (combined-404 oid))))
@@ -245,8 +248,8 @@
 		  (:td (str char))
 		  (dolist (combined combineds)
 		    (htm (:td
-			  (dolist (img (gethash char (cmb-ab combined)))
-			    (htm (:img :src img))))))))))))))))
+			  (dolist (glyph (gethash char (cmb-ab combined)))
+			    ({glyph} glyph)))))))))))))))
 
 (defroute "/rm-chart" (&key oid redirect)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))

@@ -57,7 +57,7 @@
 	(:h1 (str ,title))
 	,@body
 	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
-	(:script :src "/static/css/bootstrap.min.js")
+	(:script :src "/static/js/bootstrap.min.js")
 	(:script :src "/static/js/sticky-tabs.js"))))))
 
 (defroute "/" ()

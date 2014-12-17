@@ -56,7 +56,7 @@
 		 :ab (let ((combined (make-hash-table :test 'equal)))
 		       (dolist (unit units combined)
 			 (dolist (glyph (unit-glyphs unit))
-			   (push (glyph-url glyph) (gethash (glyph-char glyph) combined)))))))
+			   (push glyph (gethash (glyph-char glyph) combined)))))))
 
 (defun ab-union (combineds)
   "Return the union of the alphabets of several combineds, as a sorted list of chars"

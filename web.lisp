@@ -187,12 +187,16 @@
 	:hr
 	({row}
 	  (:table :class "table table-hover"
-		  (maphash (lambda (char images)
+		  (maphash (lambda (char glyphs)
 			     (htm (:tr
 				   (:td (str char))
 				   (:td
-				    (dolist (img images)
-				      (htm (:img :src img)))))))
+				    (dolist (glyph glyphs)
+				      (let ((uri (glyph-url glyph))
+					    (pos (format nil "~:[~;~1:*~{~a~a~}~]"
+							 (commatize (glyph-pos glyph) "."))))
+					(htm (:img :data-toggle "tooltip" :data-placement "right"
+						   :title pos :src uri))))))))
 			   (cmb-ab combined))))))
     (progn
       (combined-404 oid))))

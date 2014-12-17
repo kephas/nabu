@@ -235,4 +235,4 @@
     (clack.middleware.static:<clack-middleware-static>
      :path "/static/"
      :root (merge-pathnames #p"static/" (asdf:system-source-directory "nabu")))
-    *app*) :port port))
+    *app*) :port port :debug (config* :debug) :server (config* :server)))

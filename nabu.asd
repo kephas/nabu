@@ -11,15 +11,18 @@
   :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "drakma"
 			"hu.dwim.stefil" "cl-match" "cl-base64" "uuid" "do-urlencode" "caveman2" "elephant"
 			"envy")
-  :components ((:file "package")
-	       (:file "config")
-	       (:file "misc")
-	       (:file "tag")
-	       (:file "model")
-	       (:file "date")
-	       (:file "search")
-	       (:file "test")
-	       (:file "bootstrap")
-	       (:file "web")
-	       (:file "repl"))
+  :components ((:module	"src"
+	        :components ((:file "package")
+			     (:file "config")
+			     (:file "misc")
+			     (:file "tag")
+			     (:file "date")
+			     (:module "model"
+			      :components ((:file "model")
+					   (:file "search")))
+			     (:module "web"
+			      :components ((:file "bootstrap")
+					   (:file "web")))
+			     (:file "test")
+			     (:file "repl"))))
   :serial t)

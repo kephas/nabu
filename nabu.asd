@@ -19,6 +19,7 @@
 			     (:file "date")
 			     (:module "model"
 			      :components ((:file "model")
+					   (:file "shell")
 					   (:file "search")))
 			     (:module "web"
 			      :components ((:file "bootstrap")

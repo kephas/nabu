@@ -174,7 +174,7 @@
       (:uri datum))))
 
 (defun combined-404 (oid)
-  (setf (return-code*) +http-not-found+)
+  (setf (clack.response:status *response*) 404)
   (nabu-page "Chart not found"
     ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 

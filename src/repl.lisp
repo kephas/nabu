@@ -48,14 +48,13 @@
 
 
 (defun tui-shell-list (shell &optional path)
-  (with-path-error shell path
-    (let@ rec ((object (slot-value shell 'containers))
-	       (path path))
-      (format *query-io* "~:[~;~1:*~{/~a~}~]" path)
-      (if (%shell-container? shell object)
-	  (progn
-	    (format *query-io* "/~%")
-	    (%map-shell-container shell object (lambda (k v)
-						 (rec v (append path (list k))))))
-	  (format *query-io* " = ~s~%" object)))))
+  (let@ rec ((object shell)
+	     (path path))
+    (format *query-io* "~:[~;~1:*~{/~a~}~]" path)
+    (if (shell? object)
+	(progn
+	  (format *query-io* "/~%")
+	  (%map-shell object (lambda (k v)
+			       (rec v (append path (list k))))))
+	(format *query-io* " = ~s~%" object))))
 

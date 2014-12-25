@@ -23,7 +23,8 @@
 					   (:file "search")))
 			     (:module "web"
 			      :components ((:file "bootstrap")
-					   (:file "web")))
+					   (:file "web")
+					   (:file "shell")))
 			     (:file "test")
 			     (:file "repl"))))
   :serial t)

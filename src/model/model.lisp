@@ -16,6 +16,17 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
+
+(defun alternate-class (class)
+  (if-let (alternate (getf (config* :alternate-classes) class))
+    alternate
+    class))
+
+(defmacro define-alternate-maker (function class-name)
+  `(defun ,function (&rest initargs)
+     (apply #'make-instance (alternate-class ',class-name) initargs)))
+
+
 (defclass unit ()
   ((name :initarg :name :reader unit-name)
    (glyphs :initarg :glyphs :accessor unit-glyphs)
@@ -24,10 +35,14 @@
    (metadata :initarg :meta :accessor nabu-metadata))
   (:default-initargs :glyphs nil :meta (make-hash-table :test 'equal)))
 
+(define-alternate-maker make-unit unit)
+
 (defclass glyph ()
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)))
+
+(define-alternate-maker make-glyph glyph)
 
 (defun read-images-manifest (uri)
   (let ((manifest (drakma:http-request uri)))
@@ -37,14 +52,14 @@
 		   (glyphs))
 	  (if spec
 	      (rec (read in nil)
-		   (cons (make-instance 'glyph
-					:img `(:uri ,(puri:merge-uris (car spec) uri))
-					:char (cadr spec)
-					:pos (cddr spec))
+		   (cons (make-glyph
+			  :img `(:uri ,(puri:merge-uris (car spec) uri))
+			  :char (cadr spec)
+			  :pos (cddr spec))
 			 glyphs))
-	      (make-instance 'unit :name (first description) :glyphs (reverse glyphs) :uri uri
-			     :manifest manifest
-			     :meta (alist->hash (second description)))))))))
+	      (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
+			 :manifest manifest
+			 :meta (alist->hash (second description)))))))))
 
 (defclass combined ()
   ((name :initarg :name :reader cmb-name)
@@ -53,8 +68,11 @@
 
 (defclass unit-chart (combined) ())
 
-(defun make-combined (name units &key (allow-unit t))
-  (make-instance (if (and allow-unit (= 1 (length units))) 'unit-chart 'combined)
+(define-alternate-maker make-combined combined)
+(define-alternate-maker make-unit-chart unit-chart)
+
+(defun build-combined (name units &key (allow-unit t))
+  (funcall (if (and allow-unit (= 1 (length units))) #'make-unit-chart #'make-combined)
 		 :name name :units units
 		 :ab (let ((combined (make-hash-table :test 'equal)))
 		       (dolist (unit units combined)
@@ -80,3 +98,24 @@
 			     (find (unit-name (first (cmb-units (key chart)))) used :key #'unit-name :test #'equal))
 		  (list chart)))
 	      charts))))
+
+
+(ele:defpclass unit/ele (unit)
+  ((name :initarg :name :reader unit-name)
+   (glyphs :initarg :glyphs :accessor unit-glyphs)
+   (uri :initarg :uri :reader unit-uri)
+   (manifest :initarg :manifest :reader unit-manifest)
+   (metadata :initarg :meta :accessor nabu-metadata))
+  (:default-initargs :glyphs nil :meta (ele:make-btree)))
+
+(ele:defpclass glyph/ele (glyph)
+  ((char :initarg :char :reader glyph-char)
+   (pos :initarg :pos :reader glyph-pos)
+   (image :initarg :img :reader glyph-img)))
+
+(ele:defpclass combined/ele (combined)
+  ((name :initarg :name :reader cmb-name)
+   (units :initarg :units :reader cmb-units)
+   (alphabet :initarg :ab :reader cmb-ab)))
+
+(ele:defpclass unit-chart/ele (combined/ele unit-chart) ())

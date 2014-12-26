@@ -137,7 +137,7 @@
 	     (setf (shell-object *bad-default-shell* "units" unit-oid) new)
 	     (if cmb?
 		 (setf (shell-object *bad-default-shell* "combineds" (make-oid))
-		       (make-combined (unit-name new) (list new)))))
+		       (build-combined (unit-name new) (list new)))))
 	   (notice (var oid)
 	     (redirect *response* (format nil "/units?~a=~a" var (urlencode oid)))))
       (if-let (existing (find-existing-unit uri))
@@ -150,7 +150,7 @@
 		      (bind ((((cmb-oid cmb) &rest remaining) entries))
 			(shell-remove *bad-default-shell* "combineds" cmb-oid)
 			(setf (shell-object *bad-default-shell* "combineds" (make-oid))
-			      (make-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
+			      (build-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
 			(rec remaining))
 		      (progn
 			(shell-remove *bad-default-shell* "units" old-oid)
@@ -185,7 +185,7 @@
 
 
 (defroute ("/units2cmb" :method :POST) (&key name _parsed)
-  (let ((combined (make-combined name
+  (let ((combined (build-combined name
 			   (mapcan (lambda (oid)
 				     (if-let (unit (shell-object *bad-default-shell* "units" oid))
 				       (list unit)))

@@ -19,15 +19,20 @@
 (setf (config-env-var) "NABU")
 
 (defun config* (&optional key)
-  (config (package-name *package*) key))
+  (config :nothos.net/2014.05.nabu key))
 
+(defconfig elephant
+    '(:alternate-classes
+      (unit unit/ele glyph glyph/ele
+       combined combined/ele unit-chart unit-chart/ele)))
 
 (defconfig dev
     `(:storage :elephant
       :server :hunchentoot
       :debug t
       :ele-store (:clsql (:sqlite3 ,(merge-pathnames #p"nabu.sqlite"
-						     (asdf:component-pathname (asdf:find-system "nabu")))))))
+						     (asdf:component-pathname (asdf:find-system "nabu")))))
+      ,@elephant))
 
 (defconfig preprod
     `(:debug nil

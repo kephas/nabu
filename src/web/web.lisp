@@ -26,12 +26,12 @@
 (defun open-storage ()
   (case (config* :storage)
     (:memory
-     (setf *bad-default-shell* (make-instance 'shell)))
+     (setf *bad-default-shell* (make-hash-table :test 'equal)))
     (:elephant
      (ele:open-store (config* :ele-store))
      (let ((shell (ele:get-from-root "bad-default-shell")))
        (unless shell
-	 (setf shell (make-instance 'ele-shell))
+	 (setf shell (ele:make-btree))
 	 (ele:add-to-root "bad-default-shell" shell))
        (setf *bad-default-shell* shell)))))
 
@@ -52,7 +52,8 @@
 	 ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
 	  ((:ul :class "nav navbar-nav")
 	   (:li (:a :href "/units" "Units"))
-	   (:li (:a :href "/charts" "Charts"))))))
+	   (:li (:a :href "/charts" "Charts"))
+	   (:li (:a :href "/shell" "Shell"))))))
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body
@@ -62,8 +63,8 @@
 	(:script :src "/static/js/sticky-tabs.js"))))))
 
 (defroute "/" ()
-  (redirect *response* (if (zerop (shell-count *bad-default-shell* "combineds"))
-			   "/units" "/charts")))
+  (redirect *response* (if (shell-list *bad-default-shell* "combineds")
+			   "/charts" "/units")))
 
 (defparameter +s-filter+ "S-FILTER")
 
@@ -153,7 +154,7 @@
 			    " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
 			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove")))))
 		(remove-used-unit-charts (shell-list *bad-default-shell* "combineds") :key #'second))
-	   (unless (zerop (shell-count *bad-default-shell* "combineds"))
+	   (when (shell-list *bad-default-shell* "combineds")
 	     (htm ({submit} ("primary") "Compare charts"))))))
 
 
@@ -268,8 +269,8 @@
 
 (defun clackup (port)
   (open-storage)
-  (shell-ensure *bad-default-shell* "units")
-  (shell-ensure *bad-default-shell* "combineds")
+  (shell-mksub *bad-default-shell* "units")
+  (shell-mksub *bad-default-shell* "combineds")
   (clack:clackup
    (clack.builder:builder
     (clack.middleware.static:<clack-middleware-static>

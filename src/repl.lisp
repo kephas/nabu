@@ -19,7 +19,7 @@
 
 (defmethod print-object ((object unit) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (format stream "~a~:[~;~1:* (~{~a~a~})~]" (unit-name object) (commatize (hash-keys (nabu-metadata object))))))
+    (format stream "~a~:[~;~1:* (~{~a~})~]" (unit-name object) (commatize (hash-keys (nabu-metadata object))))))
 
 (defmethod print-object ((object glyph) stream)
   (print-unreadable-object (object stream :type t :identity t)

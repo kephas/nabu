@@ -47,13 +47,13 @@
   (map 'string #'identity string))
 
 (defun commatize (list &optional (separator ",") (end ""))
-  "Prepare LIST to be pretty-printed through ~{~a~a~}"
+  "Prepare LIST to be pretty-printed"
   (let@ rec ((list list)
 	     (result nil))
     (if list
 	(rec (rest list)
 	     (cons (string-copy separator) (cons (first list) result)))
-	(reverse (cons "" (cons end (rest result)))))))
+	(reverse (cons end (rest result))))))
 
 (defun make-oid ()
   (base64:usb8-array-to-base64-string (uuid:uuid-to-byte-array (uuid:make-v4-uuid))))

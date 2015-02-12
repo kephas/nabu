@@ -20,6 +20,7 @@
   ((name :initarg :name :reader unit-name)
    (glyphs :initarg :glyphs :accessor unit-glyphs)
    (uri :initarg :uri :reader unit-uri)
+   (manifest :initarg :manifest :reader unit-manifest)
    (metadata :initarg :meta :accessor nabu-metadata))
   (:default-initargs :glyphs nil :meta (make-hash-table :test 'equal)))
 
@@ -29,19 +30,21 @@
    (image :initarg :img :reader glyph-img)))
 
 (defun read-images-manifest (uri)
-  (with-input-from-string (manifest (drakma:http-request uri))
-    (let ((description (read manifest)))
-      (let@ rec ((spec (read manifest nil))
-		 (glyphs))
-	(if spec
-	    (rec (read manifest nil)
-		 (cons (make-instance 'glyph
-				      :img `(:uri ,(puri:merge-uris (car spec) uri))
-				      :char (cadr spec)
-				      :pos (cddr spec))
-		       glyphs))
-	    (make-instance 'unit :name (first description) :glyphs (reverse glyphs) :uri uri
-			   :meta (alist->hash (second description))))))))
+  (let ((manifest (drakma:http-request uri)))
+    (with-input-from-string (in manifest)
+      (let ((description (read in)))
+	(let@ rec ((spec (read in nil))
+		   (glyphs))
+	  (if spec
+	      (rec (read in nil)
+		   (cons (make-instance 'glyph
+					:img `(:uri ,(puri:merge-uris (car spec) uri))
+					:char (cadr spec)
+					:pos (cddr spec))
+			 glyphs))
+	      (make-instance 'unit :name (first description) :glyphs (reverse glyphs) :uri uri
+			     :manifest manifest
+			     :meta (alist->hash (second description)))))))))
 
 (defclass combined ()
   ((name :initarg :name :reader cmb-name)

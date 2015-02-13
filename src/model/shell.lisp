@@ -85,6 +85,10 @@
 	    (values)))
 	(error 'not-shell :shell shell :path path :c sub-shell))))
 
+(defun shell-empty (shell &rest path)
+  (dolist (entry (apply #'shell-list shell path))
+    (apply #'shell-remove shell (append path (list (car entry))))))
+
 #| In-memory shell |#
 
 (defmethod %get-shell-value ((shell hash-table) key)

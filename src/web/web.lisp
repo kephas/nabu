@@ -82,14 +82,18 @@
 	(do-search query oid+units :key #'second))
     (error ())))
 
-(defroute "/units" (&key created)
+(defroute "/units" (&key created uptodate updated)
   (nabu-page "Units"
-    (when created
-      (handler-case
-	  (let ((name (unit-name (shell-object *bad-default-shell* "units" created))))
-	    ({alert} ("success" t) "Unit " (str name) " created."))
-	(error ()
-	  ({alert} ("danger" t) "Error after creation of unit " (:code (str created))))))
+    (macrolet ((notice (var ok action)
+		 `(when ,var
+		    (handler-case
+			(let ((name (unit-name (shell-object *bad-default-shell* "units" ,var))))
+			  ({alert} ("success" t) "Unit " (str name) ,ok))
+		      (error ()
+			({alert} ("danger" t) "Error after " ,action " of unit " (:code (str ,var))))))))
+      (notice created " created." "creation")
+      (notice uptodate " is up-to-date." "update")
+      (notice updated " has been updated." "update"))
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))

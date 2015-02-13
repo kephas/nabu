@@ -33,5 +33,6 @@
     `(:debug nil
       ,@dev))
 
-(defconfig no-db
-    '(:storage :memory))
+(defconfig dev-mem
+    `(:storage :memory
+      ,@dev))

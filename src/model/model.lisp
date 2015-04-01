@@ -44,22 +44,32 @@
 
 (define-alternate-maker make-glyph glyph)
 
-(defun read-images-manifest (uri)
-  (let ((manifest (drakma:http-request uri)))
-    (with-input-from-string (in manifest)
-      (let ((description (read in)))
-	(let@ rec ((spec (read in nil))
-		   (glyphs))
-	  (if spec
-	      (rec (read in nil)
-		   (cons (make-glyph
-			  :img `(:uri ,(puri:merge-uris (car spec) uri))
-			  :char (cadr spec)
-			  :pos (cddr spec))
-			 glyphs))
-	      (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
-			 :manifest manifest
-			 :meta (alist->hash (second description)))))))))
+(defgeneric %manifest->object (kind manifest-data uri manifest))
+
+(defun manifest->object (uri manifest)
+  "Take a manifest and create the described object"
+  (let ((manifest-form (read-from-string manifest)))
+    (%manifest->object (first manifest-form) (rest manifest-form) uri manifest)))
+
+(defmethod %manifest->object ((kind (eql 'unit0)) manifest-data uri manifest)
+  (let ((description (car manifest-data)))
+    (let@ rec ((spec (cadr manifest-data))
+	       (specs (cddr manifest-data))
+	       (glyphs))
+      (if spec
+	  (rec (first specs)
+	       (rest specs)
+	       (cons (make-glyph
+		      :img `(:uri ,(puri:merge-uris (car spec) uri))
+		      :char (cadr spec)
+		      :pos (cddr spec))
+		     glyphs))
+	  (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
+		     :manifest manifest
+		     :meta (alist->hash (second description)))))))
+
+(defun http-manifest->object (uri)
+  (manifest->object uri (drakma:http-request uri)))
 
 (defclass combined ()
   ((name :initarg :name :reader cmb-name)

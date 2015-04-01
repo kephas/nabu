@@ -131,7 +131,7 @@
 	 ({submit} ("primary") "Add"))))))
 
 (defroute ("/addunit" :method :POST) (&key uri)
-  (let ((new (read-images-manifest uri))
+  (let ((new (http-manifest->object uri))
 	(unit-oid (make-oid)))
     (flet ((store-new (cmb?)
 	     (setf (shell-object *bad-default-shell* "units" unit-oid) new)

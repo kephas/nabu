@@ -27,17 +27,21 @@
      (apply #'make-instance (alternate-class ',class-name) initargs)))
 
 
-(defclass unit ()
+(defclass w/metadata ()
+  ((metadata :initarg :meta :accessor nabu-metadata))
+  (:default-initargs :meta (make-hash-table :test 'equal)))
+
+
+(defclass unit (w/metadata)
   ((name :initarg :name :reader unit-name)
    (glyphs :initarg :glyphs :accessor unit-glyphs)
    (uri :initarg :uri :reader unit-uri)
-   (manifest :initarg :manifest :reader unit-manifest)
-   (metadata :initarg :meta :accessor nabu-metadata))
-  (:default-initargs :glyphs nil :meta (make-hash-table :test 'equal)))
+   (manifest :initarg :manifest :reader unit-manifest))
+  (:default-initargs :glyphs nil))
 
 (define-alternate-maker make-unit unit)
 
-(defclass glyph ()
+(defclass glyph (w/metadata)
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)))
@@ -66,6 +70,16 @@
 (defun sort-by-pos (glyphs)
   (sort glyphs #'pos<= :key #'glyph-pos/values))
 
+(defun digits? (string)
+  (ppcre:scan "[0-9]+" string))
+
+(defun parse-glyph-pos (pos)
+  (mapcar (lambda (string)
+	    (if (digits? string)
+		(parse-integer string)
+		(list string (parse-roman (string-upcase string)))))
+	  (split-sequence #\. pos)))
+
 
 (defgeneric %manifest->object (kind manifest-data uri manifest))
 
@@ -86,6 +100,24 @@
 		      :img `(:uri ,(puri:merge-uris (car spec) uri))
 		      :char (cadr spec)
 		      :pos (cddr spec))
+		     glyphs))
+	  (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
+		     :manifest manifest
+		     :meta (alist->hash (second description)))))))
+
+(defmethod %manifest->object ((kind (eql 'unit1)) manifest-data uri manifest)
+  (let ((description (car manifest-data)))
+    (let@ rec ((spec (cadr manifest-data))
+	       (specs (cddr manifest-data))
+	       (glyphs))
+      (if spec
+	  (rec (first specs)
+	       (rest specs)
+	       (cons (make-glyph
+		      :img `(:uri ,(puri:merge-uris (first spec) uri))
+		      :char (second spec)
+		      :pos (parse-glyph-pos (third spec))
+		      :meta (alist->hash (fourth spec)))
 		     glyphs))
 	  (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
 		     :manifest manifest
@@ -133,15 +165,18 @@
 	      charts))))
 
 
-(ele:defpclass unit/ele (unit)
+(ele:defpclass w/metadata/ele ()
+  ((metadata :initarg :meta :accessor nabu-metadata))
+  (:default-initargs :meta (ele:make-btree)))
+
+(ele:defpclass unit/ele (unit w/metadata/ele)
   ((name :initarg :name :reader unit-name)
    (glyphs :initarg :glyphs :accessor unit-glyphs)
    (uri :initarg :uri :reader unit-uri)
-   (manifest :initarg :manifest :reader unit-manifest)
-   (metadata :initarg :meta :accessor nabu-metadata))
-  (:default-initargs :glyphs nil :meta (ele:make-btree)))
+   (manifest :initarg :manifest :reader unit-manifest))
+  (:default-initargs :glyphs nil))
 
-(ele:defpclass glyph/ele (glyph)
+(ele:defpclass glyph/ele (glyph w/metadata/ele)
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)))

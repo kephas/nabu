@@ -65,6 +65,18 @@
       (is (not (funcall date-check bad))))))
 
 (in-suite all)
+(defsuite* glyph)
+
+(deftest pos-sort ()
+  (is (nabu::pos<= '(1 2 3) '(1 2 4)))
+  (is (nabu::pos<= '(1 2 3) '(1 2 4 1)))
+  (is (nabu::pos<= '(1 2 3) '(1 2 3)))
+  (is (not (nabu::pos<= '(1 2 3) '(1 2 2))))
+  (is (nabu::pos<= '(1 2 2) '(2 1 1)))
+  (is (not (nabu::pos<= '(2 1 1) '(1 2 2)))))
+
+
+(in-suite all)
 (defsuite* shell)
 
 (deftest path (&optional shell)

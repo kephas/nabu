@@ -44,6 +44,20 @@
 
 (define-alternate-maker make-glyph glyph)
 
+(defun pos<= (pos1 pos2)
+  (let@ rec ((coord1 (first pos1))
+	     (coord2 (first pos2))
+	     (coords1 (rest pos1))
+	     (coords2 (rest pos2)))
+    (if (< coord1 coord2)
+	t
+	(if (> coord1 coord2)
+	    nil
+	    (if (or (null coords1) (null coords2))
+		t
+		(rec (first coords1) (first coords2) (rest coords1) (rest coords2)))))))
+
+
 (defgeneric %manifest->object (kind manifest-data uri manifest))
 
 (defun manifest->object (uri manifest)

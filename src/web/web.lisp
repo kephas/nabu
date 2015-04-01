@@ -148,12 +148,12 @@
 		(let@ rec ((entries (find-unit-charts old-unit)))
 		  (if entries
 		      (bind ((((cmb-oid cmb) &rest remaining) entries))
-			(shell-remove *bad-default-shell* "combineds" cmb-oid)
+			(shell-remove! *bad-default-shell* "combineds" cmb-oid)
 			(setf (shell-object *bad-default-shell* "combineds" (make-oid))
 			      (build-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
 			(rec remaining))
 		      (progn
-			(shell-remove *bad-default-shell* "units" old-oid)
+			(shell-remove! *bad-default-shell* "units" old-oid)
 			(store-new nil)
 			(notice "UPDATED" unit-oid)))))))
 	(progn
@@ -286,7 +286,7 @@
 (defroute "/rm-chart" (&key oid redirect)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
     (progn
-      (shell-remove *bad-default-shell* "combineds" oid)
+      (shell-remove! *bad-default-shell* "combineds" oid)
       (if redirect
 	  (redirect *response* (format nil "/charts?REMOVED=~a" (cmb-name combined)))
 	  (nabu-page "Chart removed"
@@ -295,8 +295,8 @@
 
 (defun clackup (port)
   (open-storage)
-  (shell-mksub *bad-default-shell* "units")
-  (shell-mksub *bad-default-shell* "combineds")
+  (shell-mksub! *bad-default-shell* "units")
+  (shell-mksub! *bad-default-shell* "combineds")
   (clack:clackup
    (clack.builder:builder
     (clack.middleware.static:<clack-middleware-static>

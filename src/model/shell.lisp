@@ -54,7 +54,7 @@
 		  (lambda (shell key)
 		    (%set-shell-value shell key value))))
 
-(defun shell-mksub (shell &rest path)
+(defun shell-mksub! (shell &rest path)
   (%do-shell-path shell path
 		  (lambda (shell key)
 		    (bind (((:values sub found?) (shell-object shell key)))
@@ -64,7 +64,7 @@
 			      (error 'not-shell :shell shell :path path :c sub))
 			  (%set-shell-value shell key (%make-shell shell)))))))
 
-(defun shell-remove (shell &rest path)
+(defun shell-remove! (shell &rest path)
   "Remove an entry from a shell"
   (%do-shell-path shell path
 		  (lambda (shell key)
@@ -85,9 +85,9 @@
 	    (values)))
 	(error 'not-shell :shell shell :path path :c sub-shell))))
 
-(defun shell-empty (shell &rest path)
+(defun shell-empty! (shell &rest path)
   (dolist (entry (apply #'shell-list shell path))
-    (apply #'shell-remove shell (append path (list (car entry))))))
+    (apply #'shell-remove! shell (append path (list (car entry))))))
 
 #| In-memory shell |#
 

@@ -1,0 +1,71 @@
+{
+
+
+
+
+
+
+    "extra_strings": [
+
+
+
+
+
+
+        "BLOCKED-BY:1587242f-b5c6-4839-9e50-d9d1864be0db", 
+
+
+
+
+
+
+        "BLOCKED-BY:81de9bcd-52d2-4e4f-ac6e-000e2bdf51e1", 
+
+
+
+
+
+
+        "BLOCKED-BY:a3064fc9-7c54-45b8-a93d-d512c8115600"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
+    "severity": "target", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Showcase", 
+
+
+
+
+
+
+    "time": "Tue, 31 Mar 2015 14:10:06 +0000"
+
+
+
+
+
+
+}

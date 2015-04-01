@@ -1,0 +1,71 @@
+{
+
+
+
+
+
+
+    "creator": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "extra_strings": [
+
+
+
+
+
+
+        "BLOCKS:9b34254c-2a77-41ab-b3c3-aa1a01c861f8"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
+    "reporter": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "severity": "critical", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Glyphs should be ordered by position", 
+
+
+
+
+
+
+    "time": "Tue, 31 Mar 2015 13:49:43 +0000"
+
+
+
+
+
+
+}

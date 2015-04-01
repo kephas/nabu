@@ -1,0 +1,8 @@
+Manifest data should be a single s-expression defining the kind and
+version of manifest, i.e. (unit-1.1 …)
+== Anything below this line will be ignored Please
+enter your comment above
+
+Subject: Typed/versioned manifests
+
+> No comments

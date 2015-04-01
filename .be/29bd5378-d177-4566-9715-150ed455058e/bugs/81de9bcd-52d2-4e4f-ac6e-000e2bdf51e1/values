@@ -1,0 +1,71 @@
+{
+
+
+
+
+
+
+    "creator": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "extra_strings": [
+
+
+
+
+
+
+        "BLOCKS:9b34254c-2a77-41ab-b3c3-aa1a01c861f8"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
+    "reporter": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "severity": "critical", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Add non-numerical glyph positions", 
+
+
+
+
+
+
+    "time": "Tue, 31 Mar 2015 14:07:50 +0000"
+
+
+
+
+
+
+}

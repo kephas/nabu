@@ -227,7 +227,7 @@
 			     (htm (:tr
 				   (:td (str char))
 				   (:td
-				    (dolist (glyph glyphs)
+				    (dolist (glyph (sort-by-pos glyphs))
 				      ({glyph} glyph))))))
 			   (cmb-ab combined))))))
     (progn
@@ -280,7 +280,7 @@
 		  (:td (str char))
 		  (dolist (combined combineds)
 		    (htm (:td
-			  (dolist (glyph (gethash char (cmb-ab combined)))
+			  (dolist (glyph (sort-by-pos (gethash char (cmb-ab combined))))
 			    ({glyph} glyph)))))))))))))))
 
 (defroute "/rm-chart" (&key oid redirect)

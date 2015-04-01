@@ -57,6 +57,9 @@
 		t
 		(rec (first coords1) (first coords2) (rest coords1) (rest coords2)))))))
 
+(defun sort-by-pos (glyphs)
+  (sort glyphs #'pos<= :key #'glyph-pos))
+
 
 (defgeneric %manifest->object (kind manifest-data uri manifest))
 

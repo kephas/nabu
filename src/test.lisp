@@ -42,6 +42,12 @@
     (is (equal '(1 3 2 4 5 6) (nabu::swap-right 2 list)))
     (is (equal list (nabu::swap-right 6 list)))))
 
+(deftest roman ()
+  (is (= (nabu::parse-roman "MDCCLXVIII") 1768))
+  (is (= (nabu::parse-roman "MMCDXCIX") 2499))
+  (is (= (nabu::parse-roman "CMXII") 912)))
+
+
 (in-suite all)
 (defsuite* date)
 

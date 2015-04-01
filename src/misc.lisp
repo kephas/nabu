@@ -85,3 +85,21 @@
 	      (if after
 		  (rec (cons previous before) next (first after) (rest after))
 		  list))))))
+
+(defun roman-value (digit)
+  "Return the value of a roman digit"
+  (if-let (rank (position digit "IVXLCDM"))
+    (nth rank (list 1 5 10 50 100 500 1000))
+    0))
+
+(defun parse-roman (number)
+  (let ((digits (append (map 'list #'roman-value number) '(0))))
+    (let@ rec ((digit (first digits))
+	       (next (second digits))
+	       (others (cddr digits))
+	       (result 0))
+      (if next
+	  (rec next (first others) (rest others) (if (< digit next)
+						     (- result digit)
+						     (+ result digit)))
+	  result))))

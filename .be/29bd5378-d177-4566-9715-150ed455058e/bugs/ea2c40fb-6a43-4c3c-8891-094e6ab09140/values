@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "reporter": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Default encoding for manifest should be Unicode", 
+
+
+
+
+
+
+    "time": "Thu, 02 Apr 2015 23:29:36 +0000"
+
+
+
+
+
+
+}

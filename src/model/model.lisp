@@ -57,8 +57,14 @@
 		t
 		(rec (first coords1) (first coords2) (rest coords1) (rest coords2)))))))
 
+(defun glyph-pos/values (glyph)
+  (mapcar (lambda (coord) (if (atom coord) coord (second coord))) (glyph-pos glyph)))
+
+(defun glyph-pos/display (glyph)
+  (mapcar (lambda (coord) (if (atom coord) coord (first coord))) (glyph-pos glyph)))
+
 (defun sort-by-pos (glyphs)
-  (sort glyphs #'pos<= :key #'glyph-pos))
+  (sort glyphs #'pos<= :key #'glyph-pos/values))
 
 
 (defgeneric %manifest->object (kind manifest-data uri manifest))

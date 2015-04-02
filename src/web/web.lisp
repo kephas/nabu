@@ -209,7 +209,7 @@
   `(let ((uri (glyph-url ,glyph))
 	 (pos (handler-case
 		  (format nil "~:[~;~1:*~{~a~a~}~]"
-			  (commatize (glyph-pos ,glyph) "."))
+			  (commatize (glyph-pos/display ,glyph) "."))
 		(error () ""))))
      (htm (:img :data-toggle "tooltip" :data-placement "right"
 		:title pos :src uri))))

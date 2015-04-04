@@ -1,0 +1,71 @@
+{
+
+
+
+
+
+
+    "creator": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "extra_strings": [
+
+
+
+
+
+
+        "BLOCKS:9b34254c-2a77-41ab-b3c3-aa1a01c861f8"
+
+
+
+
+
+
+    ], 
+
+
+
+
+
+
+    "reporter": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Resize glyphs according to their resolution", 
+
+
+
+
+
+
+    "time": "Sat, 04 Apr 2015 19:40:25 +0000"
+
+
+
+
+
+
+}

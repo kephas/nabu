@@ -297,6 +297,7 @@
   (open-storage)
   (shell-mksub! *bad-default-shell* "units")
   (shell-mksub! *bad-default-shell* "combineds")
+  (setf drakma:*drakma-default-external-format* :utf8)
   (clack:clackup
    (clack.builder:builder
     (clack.middleware.static:<clack-middleware-static>

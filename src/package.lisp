@@ -16,7 +16,7 @@
 
 (defpackage :nothos.net/2014.05.nabu
   (:use :common-lisp :alexandria :scheme :cl-ppcre :split-sequence :metabang-bind :who
-	:cl-match :envy)
+	:cl-match)
   (:import-from :cl-fad #:pathname-as-file #:list-directory)
   (:import-from :do-urlencode #:urlencode #:urldecode)
   (:import-from :caveman2 #:defroute #:*request* #:*response*)

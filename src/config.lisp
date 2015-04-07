@@ -16,28 +16,21 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-(setf (config-env-var) "NABU")
+(defvar *configuration*)
 
-(defun config* (&optional key)
-  (config :nothos.net/2014.05.nabu key))
+(defun read-configuration! (&optional config-file)
+  (let* ((file (if config-file config-file
+		   (merge-pathnames #p"config.local"
+				    (asdf:component-pathname (asdf:find-system "nabu")))))
+	 (config (handler-case (with-input-from-file (in file)
+				 (read in))
+		   (error () nil))))
+    (when (eq (getf config :storage) :elephant)
+      (setf config (append '(:alternate-classes
+			     (unit unit/ele glyph glyph/ele
+			      combined combined/ele unit-chart unit-chart/ele))
+			   config)))
+    (setf *configuration* config)))
 
-(defconfig elephant
-    '(:alternate-classes
-      (unit unit/ele glyph glyph/ele
-       combined combined/ele unit-chart unit-chart/ele)))
-
-(defconfig dev
-    `(:storage :elephant
-      :server :hunchentoot
-      :debug t
-      :ele-store (:clsql (:sqlite3 ,(merge-pathnames #p"nabu.sqlite"
-						     (asdf:component-pathname (asdf:find-system "nabu")))))
-      ,@elephant))
-
-(defconfig preprod
-    `(:debug nil
-      ,@dev))
-
-(defconfig dev-mem
-    `(:storage :memory
-      ,@dev))
+(defun config* (key)
+  (getf *configuration* key))

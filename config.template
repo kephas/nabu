@@ -1,0 +1,20 @@
+; this file should be copied/renamed as "config.local"
+
+(
+; the storage backend
+; supported values:
+; :memory
+; :elephant
+:storage :elephant
+
+; forwarded as clackup's :server argument
+; cf. clack's documentation for supported values
+:server :hunchentoot
+
+; forwarded as clackup's :debug argument
+; cf. clack's documentation for supported values
+:debug t
+
+; location of the elephant storage
+:ele-store (:clsql (:postgresql "host" "database" "user" "password" "port"))
+)

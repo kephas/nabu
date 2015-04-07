@@ -293,7 +293,8 @@
 	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
     (combined-404 oid)))
 
-(defun clackup (port)
+(defun clackup (port &optional config-file)
+  (read-configuration! config-file)
   (open-storage)
   (shell-mksub! *bad-default-shell* "units")
   (shell-mksub! *bad-default-shell* "combineds")

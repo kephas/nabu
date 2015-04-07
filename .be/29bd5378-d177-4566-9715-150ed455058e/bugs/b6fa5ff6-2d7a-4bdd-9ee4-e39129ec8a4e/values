@@ -1,0 +1,50 @@
+{
+
+
+
+
+
+
+    "creator": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "reporter": "Pierre Thierry <pierre@nothos.net>", 
+
+
+
+
+
+
+    "severity": "minor", 
+
+
+
+
+
+
+    "status": "open", 
+
+
+
+
+
+
+    "summary": "Handle bad URIs gracefully", 
+
+
+
+
+
+
+    "time": "Tue, 07 Apr 2015 08:19:38 +0000"
+
+
+
+
+
+
+}

@@ -26,6 +26,12 @@
   `(defun ,function (&rest initargs)
      (apply #'make-instance (alternate-class ',class-name) initargs)))
 
+(defmacro with-transaction ((&rest txn-args) &body body)
+  `(if (eq (config* :storage) :elephant)
+       (ele:with-transaction ,txn-args ,@body)
+       (progn
+	 ,@body)))
+
 
 (defclass w/metadata ()
   ((metadata :initarg :meta :accessor nabu-metadata))
@@ -89,39 +95,41 @@
     (%manifest->object (first manifest-form) (rest manifest-form) uri manifest)))
 
 (defmethod %manifest->object ((kind (eql 'unit0)) manifest-data uri manifest)
-  (let ((description (car manifest-data)))
-    (let@ rec ((spec (cadr manifest-data))
-	       (specs (cddr manifest-data))
-	       (glyphs))
-      (if spec
-	  (rec (first specs)
-	       (rest specs)
-	       (cons (make-glyph
-		      :img `(:uri ,(puri:merge-uris (car spec) uri))
-		      :char (cadr spec)
-		      :pos (cddr spec))
-		     glyphs))
-	  (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
-		     :manifest manifest
-		     :meta (alist->hash (second description)))))))
+  (with-transaction ()
+    (let ((description (car manifest-data)))
+      (let@ rec ((spec (cadr manifest-data))
+		 (specs (cddr manifest-data))
+		 (glyphs))
+	(if spec
+	    (rec (first specs)
+		 (rest specs)
+		 (cons (make-glyph
+			:img `(:uri ,(puri:merge-uris (car spec) uri))
+			:char (cadr spec)
+			:pos (cddr spec))
+		       glyphs))
+	    (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
+		       :manifest manifest
+		       :meta (alist->hash (second description))))))))
 
 (defmethod %manifest->object ((kind (eql 'unit1)) manifest-data uri manifest)
-  (let ((description (car manifest-data)))
-    (let@ rec ((spec (cadr manifest-data))
-	       (specs (cddr manifest-data))
-	       (glyphs))
-      (if spec
-	  (rec (first specs)
-	       (rest specs)
-	       (cons (make-glyph
-		      :img `(:uri ,(puri:merge-uris (first spec) uri))
-		      :char (second spec)
-		      :pos (parse-glyph-pos (third spec))
-		      :meta (alist->hash (fourth spec)))
-		     glyphs))
-	  (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
-		     :manifest manifest
-		     :meta (alist->hash (second description)))))))
+  (with-transaction ()
+    (let ((description (car manifest-data)))
+      (let@ rec ((spec (cadr manifest-data))
+		 (specs (cddr manifest-data))
+		 (glyphs))
+	(if spec
+	    (rec (first specs)
+		 (rest specs)
+		 (cons (make-glyph
+			:img `(:uri ,(puri:merge-uris (first spec) uri))
+			:char (second spec)
+			:pos (parse-glyph-pos (third spec))
+			:meta (alist->hash (fourth spec)))
+		       glyphs))
+	    (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
+		       :manifest manifest
+		       :meta (alist->hash (second description))))))))
 
 (defun http-manifest->object (uri)
   (manifest->object uri (drakma:http-request uri)))

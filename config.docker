@@ -1,0 +1,8 @@
+; this is a config that will work out-of-the-box if you
+; deploy with the provided Docker compose setup
+(
+:storage :elephant
+:server :hunchentoot
+:debug t
+:ele-store (:clsql (:postgresql #.(asdf::getenv "PG_PORT_5432_TCP_ADDR") "nabu" "nabu" "nabu" "5432"))
+)

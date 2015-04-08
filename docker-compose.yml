@@ -1,0 +1,12 @@
+web:
+  build: .
+  ports:
+    - "8888:80"
+  links:
+    - pg
+  stdin_open: true
+pg:
+  image: postgres
+  environment:
+    - POSTGRES_USER=nabu
+    - POSTGRES_PASSWORD=nabu

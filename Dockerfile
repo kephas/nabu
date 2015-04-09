@@ -1,11 +1,10 @@
 FROM debian:testing
 MAINTAINER Pierre Thierry <pierre@nothos.net>
 
-RUN apt-get update && apt-get install -y \
-    wget \
+RUN apt-get update && apt-get install -y build-essential
+RUN apt-get install -y wget \
     sbcl \
     git \
-    gcc \
     libpq-dev
 RUN wget http://beta.quicklisp.org/quicklisp.lisp
 RUN sbcl --load quicklisp.lisp --eval '(quicklisp-quickstart:install)' --eval '(let ((ql-util::*do-not-prompt* t))(ql:add-to-init-file))'

@@ -28,5 +28,7 @@ RUN sbcl --eval '(ql:quickload (list "cl-match" "cl-base64" "uuid" "do-urlencode
 COPY ./ /root/quicklisp/local-projects/nabu/
 RUN sbcl --eval '(ql:register-local-projects)' --eval '(ql:quickload "nabu")' # Pre-compile the project
 
-CMD sbcl --eval '(ql:quickload "nabu")' --eval "(in-package :nabu)" --eval "(clackup 80)"
+CMD sbcl --eval '(ql:quickload (list "cl-docker-tools" "nabu"))' --eval "(in-package :nabu)" \
+         --eval '(docker-tools:swank 4005)' --eval "(clackup 80)"
+EXPOSE 4005
 EXPOSE 80

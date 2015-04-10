@@ -1,3 +1,4 @@
 config.local
 *.sqlite
 .be/id-cache
+backup/*.sql

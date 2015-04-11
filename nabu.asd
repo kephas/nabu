@@ -5,7 +5,7 @@
 
 (defsystem "nabu"
   :description "Prototype palaeographic chart builder"
-  :version "0.1"
+  :version "0.2"
   :author "Pierre Thierry <pierre@nothos.net>"
   :licence "AGPL"
   :depends-on ("scheme" "alexandria" "cl-fad" "cl-ppcre" "split-sequence" "metabang-bind" "cl-who" "drakma"

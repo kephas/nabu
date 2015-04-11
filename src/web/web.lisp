@@ -21,6 +21,10 @@
 (defparameter *app* (make-instance '<nabu>))
 
 
+(defun get-parsed (name parsed)
+  (cdr (assoc name parsed :test #'string=)))
+
+
 (defvar *bad-default-shell* nil)
 
 (defun open-storage ()
@@ -189,7 +193,7 @@
 			   (mapcan (lambda (oid)
 				     (if-let (unit (shell-object *bad-default-shell* "units" oid))
 				       (list unit)))
-				   (getf _parsed :units))
+				   (get-parsed :units _parsed))
 			   :allow-unit nil))
 	(oid (make-oid)))
     (setf (shell-object *bad-default-shell* "combineds" oid) combined)
@@ -237,7 +241,7 @@
   (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))
 
 (defroute "/compare" (&key _parsed)
-  (let ((request-oids (getf _parsed :oids)))
+  (let ((request-oids (get-parsed :oids _parsed)))
     (bind (((:values combineds oids+names)
 	    (let@ rec ((oids request-oids)
 		       (combineds)

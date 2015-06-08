@@ -18,3 +18,7 @@
 
 (defroute "/units.json" ()
   (json:encode-json-to-string (shell-list *bad-default-shell* "units")))
+
+(defroute ("/addunit.json" :method :POST) (&key uri)
+  (%addunit uri (lambda (result oid)
+		  (json:encode-json-to-string (list result oid)))))

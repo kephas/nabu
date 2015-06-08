@@ -133,35 +133,38 @@
        ({col} 12 2
 	 ({submit} ("primary") "Add"))))))
 
+(defun %addunit (uri callback)
+  (with-lisp1 (callback)
+    (let ((new (http-manifest->object uri))
+	  (unit-oid (make-oid)))
+      (flet ((store-new (cmb?)
+	       (setf (shell-object *bad-default-shell* "units" unit-oid) new)
+	       (if cmb?
+		   (setf (shell-object *bad-default-shell* "combineds" (make-oid))
+			 (build-combined (unit-name new) (list new))))))
+	(if-let (existing (find-existing-unit uri))
+	  (bind (((old-oid old-unit) existing))
+	    (if (string= (unit-manifest old-unit) (unit-manifest new))
+		(callback "UPTODATE" old-oid)
+		(progn
+		  (let@ rec ((entries (find-unit-charts old-unit)))
+		    (if entries
+			(bind ((((cmb-oid cmb) &rest remaining) entries))
+			  (shell-remove! *bad-default-shell* "combineds" cmb-oid)
+			  (setf (shell-object *bad-default-shell* "combineds" (make-oid))
+				(build-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
+			  (rec remaining))
+			(progn
+			  (shell-remove! *bad-default-shell* "units" old-oid)
+			  (store-new nil)
+			  (callback "UPDATED" unit-oid)))))))
+	  (progn
+	    (store-new t)
+	    (callback "CREATED" unit-oid)))))))
+
 (defroute ("/addunit" :method :POST) (&key uri)
-  (let ((new (http-manifest->object uri))
-	(unit-oid (make-oid)))
-    (flet ((store-new (cmb?)
-	     (setf (shell-object *bad-default-shell* "units" unit-oid) new)
-	     (if cmb?
-		 (setf (shell-object *bad-default-shell* "combineds" (make-oid))
-		       (build-combined (unit-name new) (list new)))))
-	   (notice (var oid)
-	     (redirect *response* (format nil "/units?~a=~a" var (urlencode oid)))))
-      (if-let (existing (find-existing-unit uri))
-	(bind (((old-oid old-unit) existing))
-	  (if (string= (unit-manifest old-unit) (unit-manifest new))
-	      (notice "UPTODATE" old-oid)
-	      (progn
-		(let@ rec ((entries (find-unit-charts old-unit)))
-		  (if entries
-		      (bind ((((cmb-oid cmb) &rest remaining) entries))
-			(shell-remove! *bad-default-shell* "combineds" cmb-oid)
-			(setf (shell-object *bad-default-shell* "combineds" (make-oid))
-			      (build-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
-			(rec remaining))
-		      (progn
-			(shell-remove! *bad-default-shell* "units" old-oid)
-			(store-new nil)
-			(notice "UPDATED" unit-oid)))))))
-	(progn
-	  (store-new t)
-	  (notice "CREATED" unit-oid))))))
+  (%addunit uri (lambda (var oid)
+		  (redirect *response* (format nil "/units?~a=~a" var (urlencode oid))))))
 
 (defroute "/charts" (&key created removed)
   (nabu-page "Charts"

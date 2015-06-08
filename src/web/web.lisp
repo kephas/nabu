@@ -111,17 +111,19 @@
 		    ({col} 8 10 (:input :class "form-control" :type "text" :name "S-FILTER"))
 		    ({col} 4 2 ({submit} ("default") "Filter"))))))
     (:hr)
-    (:form :role "form" :method "POST" :action "/units2cmb" :ng-controller "unitsCtrl"
-	   (:div :class "form-group"
-		 ({row} :ng-repeat "item in shellList"
-			({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
-		 ({row}
-		   ({col} 12 6
-		     (:div :class "input-group"
-			   (:label :class "input-group-addon" "Chart name:")
-			   (:input :class "form-control" :name "NAME")))
-		   ({col} 4 6
-		     ({submit} ("primary") "Combine units")))))
+    (:div :ng-controller "unitsCtrl"
+	  ({button} ("default" :size "xs") :ng-click "refresh()" "Refresh list")
+	  (:form :role "form" :method "POST" :action "/units2cmb"
+		 (:div :class "form-group"
+		       ({row} :ng-repeat "item in shellList"
+			      ({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
+		       ({row}
+			 ({col} 12 6
+			   (:div :class "input-group"
+				 (:label :class "input-group-addon" "Chart name:")
+				 (:input :class "form-control" :name "NAME")))
+			 ({col} 4 6
+			   ({submit} ("primary") "Combine units"))))))
     (:hr)
     (:h2 "Add unit")
     ((:form :role "form" :method "POST" :action "/addunit")

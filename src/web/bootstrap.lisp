@@ -36,6 +36,10 @@
     (once-only (href)
       `(htm (:a :class ,class :href ,href ,@body)))))
 
+(defmacro {button} ((btn-class &key size (classes "")) &body body)
+  (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] ~a" btn-class size classes)))
+    `(htm (:button :class ,class ,@body))))
+
 (defmacro {alert} ((alert-class &optional dismiss?) &body body)
   (let ((class (format nil "alert alert-~a ~a" alert-class (if dismiss? "alert-dismissible" ""))))
     `(htm ((:div :class ,class :role "alert")

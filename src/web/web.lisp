@@ -41,7 +41,7 @@
 
 (defmacro nabu-page (title &body body)
   `(with-html-output-to-string (out nil :indent t)
-     (:html
+     (:html :ng-app "nabuApp"
       (:head
        (:title (fmt "NABU - ~a" ,title))
        (:meta :name "viewport" :content "width=device-width")
@@ -63,6 +63,8 @@
 	,@body
 	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
 	(:script :src "/static/js/bootstrap.min.js")
+	(:script :src "/static/js/angular.min.js")
+	(:script :src "/static/js/test.js")
 	(:script :src "/static/js/local.js")
 	(:script :src "/static/js/sticky-tabs.js"))))))
 
@@ -109,13 +111,10 @@
 		    ({col} 8 10 (:input :class "form-control" :type "text" :name "S-FILTER"))
 		    ({col} 4 2 ({submit} ("default") "Filter"))))))
     (:hr)
-    (:form :role "form" :method "POST" :action "/units2cmb"
+    (:form :role "form" :method "POST" :action "/units2cmb" :ng-controller "unitsCtrl"
 	   (:div :class "form-group"
-		 (dolist (oid+unit (filter-units (shell-list *bad-default-shell* "units")))
-		   (htm
-		    ({row}
-		      ({col} 12 12 ({checkbox} "UNITS[]" (first oid+unit)
-				     (str (unit-name (second oid+unit))))))))
+		 ({row} :ng-repeat "item in shellList"
+			({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
 		 ({row}
 		   ({col} 12 6
 		     (:div :class "input-group"

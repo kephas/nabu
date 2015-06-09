@@ -110,6 +110,8 @@
 		    ({col} 4 2 ({submit} ("default") "Filter"))))))
     (:hr)
     (:div :ng-controller "unitsCtrl"
+	  (:alert :ng-repeat "alert in alerts" :type "{{alert.type}}" :close "dismiss(alert.id)"
+		  "{{alert.message}}")
 	  ({button} ("default" :size "xs") :ng-click "refresh()" "Refresh list")
 	  (:form :role "form" :method "POST" :action "/units2cmb"
 		 (:div :class "form-group"

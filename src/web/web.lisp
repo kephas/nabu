@@ -64,6 +64,12 @@
 	(:script :src "/static/js/jquery.min.js")
 	(:script :src "/static/js/bootstrap.min.js")
 	(:script :src "/static/js/angular.min.js")
+	(:script :src "/static/js/angular-animate.min.js")
+	(:script :src "/static/js/angular-aria.min.js")
+	(:script :src "/static/js/angular-cookies.min.js")
+	(:script :src "/static/js/angular-messages.min.js")
+	(:script :src "/static/js/angular-route.min.js")
+	(:script :src "/static/js/angular-sanitize.min.js")
 	(:script :src "/static/js/test.js"))))))
 
 (defroute "/" ()

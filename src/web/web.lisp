@@ -61,12 +61,10 @@
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body
-	(:script :src "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
+	(:script :src "/static/js/jquery.min.js")
 	(:script :src "/static/js/bootstrap.min.js")
 	(:script :src "/static/js/angular.min.js")
-	(:script :src "/static/js/test.js")
-	(:script :src "/static/js/local.js")
-	(:script :src "/static/js/sticky-tabs.js"))))))
+	(:script :src "/static/js/test.js"))))))
 
 (defroute "/" ()
   (redirect *response* (if (shell-list *bad-default-shell* "combineds")

@@ -70,6 +70,7 @@
 	(:script :src "/static/js/angular-messages.min.js")
 	(:script :src "/static/js/angular-route.min.js")
 	(:script :src "/static/js/angular-sanitize.min.js")
+	(:script :src "/static/js/alerts.js")
 	(:script :src "/static/js/test.js"))))))
 
 (defroute "/" ()

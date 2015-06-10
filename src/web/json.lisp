@@ -20,5 +20,49 @@
   (json:encode-json-to-string (shell-list *bad-default-shell* "units")))
 
 (defroute ("/addunit.json" :method :POST) (&key uri)
-  (%addunit uri (lambda (result oid)
-		  (json:encode-json-to-string (list result oid)))))
+  (labels ((result (success? format &rest arguments)
+	     (encode-json-plist-to-string
+	      (list :type (case success? (:ok "success") (:err "danger"))
+		    :message (apply #'format nil format arguments))))
+	   (oid->name (oid)
+	     (values (unit-name (shell-object *bad-default-shell* "units" oid)) t))
+	   (done (oid ok action)
+	     (handler-case
+		 (result :ok "Unit ~a ~a." (oid->name oid) ok)
+	       (error (e)
+		 (declare (ignore e))
+		 (result :err "An error occurred after ~a of unit <code>~a</code>"
+			 action oid)))))
+    (bind (((:values new creation-error)
+	    (handler-case
+		(http-manifest->object uri)
+	      (error (e)
+		(declare (ignore e))
+		(values nil (result :err "Nothing could be created from manifest at <a href='~a'><code>~a</code></a>." uri uri)))))
+	   (unit-oid (make-oid)))
+      (flet ((store-new (cmb?)
+	       (setf (shell-object *bad-default-shell* "units" unit-oid) new)
+	       (if cmb?
+		   (setf (shell-object *bad-default-shell* "combineds" (make-oid))
+			 (build-combined (unit-name new) (list new))))))
+	(if creation-error
+	    creation-error
+	    (if-let (existing (find-existing-unit uri))
+	      (bind (((old-oid old-unit) existing))
+		(if (string= (unit-manifest old-unit) (unit-manifest new))
+		    (done old-oid "is up-to-date" "update")
+		    (progn
+		      (let@ rec ((entries (find-unit-charts old-unit)))
+			(if entries
+			    (bind ((((cmb-oid cmb) &rest remaining) entries))
+			      (shell-remove! *bad-default-shell* "combineds" cmb-oid)
+			      (setf (shell-object *bad-default-shell* "combineds" (make-oid))
+				    (build-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
+			      (rec remaining))
+			    (progn
+			      (shell-remove! *bad-default-shell* "units" old-oid)
+			      (store-new nil)
+			      (done unit-oid "has been updated" "update")))))))
+	      (progn
+		(store-new t)
+		(done unit-oid "has been created" "creation"))))))))

@@ -108,7 +108,6 @@
     (:hr)
     (:div :ng-controller "unitsCtrl"
 	  (:nabu-alerts)
-	  ({button} ("default" :size "xs") :ng-click "refresh()" "Refresh list")
 	  (:form :role "form" :method "POST" :action "/units2cmb"
 		 (:div :class "form-group"
 		       ({row} :ng-repeat "item in shellList"

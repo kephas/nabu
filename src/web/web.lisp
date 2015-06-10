@@ -71,7 +71,7 @@
 	(:script :src "/static/js/angular-route.min.js")
 	(:script :src "/static/js/angular-sanitize.min.js")
 	(:script :src "/static/js/alerts.js")
-	(:script :src "/static/js/test.js"))))))
+	(:script :src "/static/js/nabu.js"))))))
 
 (defroute "/" ()
   (redirect *response* (if (shell-list *bad-default-shell* "combineds")

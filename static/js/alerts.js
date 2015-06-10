@@ -1,4 +1,4 @@
-var nabuAlerts = angular.module('nabuAlerts', [])
+var nabuAlerts = angular.module('nabuAlerts', ['ngSanitize'])
 
     .factory('alerts', function(){
 	return {

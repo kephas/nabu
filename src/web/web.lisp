@@ -71,6 +71,7 @@
 	(:script :src "/static/js/angular-route.js")
 	(:script :src "/static/js/angular-sanitize.js")
 	(:script :src "/static/js/alerts.js")
+	(:script :src "/static/js/test.js")
 	(:script :src "/static/js/nabu.js"))))))
 
 (defroute "/" ()

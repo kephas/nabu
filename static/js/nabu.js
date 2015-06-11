@@ -19,4 +19,11 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 	};
 
 	$scope.refresh();
-    }]);
+    }])
+
+    .directive('nabuGlyphEdit', function() {
+	return {
+	    restrict: 'E',
+	    templateUrl: '/static/ng/glyph-editor.html'
+	};
+    });

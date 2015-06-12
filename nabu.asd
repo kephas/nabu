@@ -24,6 +24,7 @@
 			     (:module "web"
 			      :components ((:file "bootstrap")
 					   (:file "web")
+					   (:file "json")
 					   (:file "shell")))
 			     (:file "test")
 			     (:file "repl"))))

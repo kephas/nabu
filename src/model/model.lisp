@@ -50,7 +50,9 @@
 (defclass glyph (w/metadata)
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
-   (image :initarg :img :reader glyph-img)))
+   (image :initarg :img :reader glyph-img)
+   (baseline :initarg :bl :reader glyph-bl))
+  (:default-initargs :bl 0))
 
 (define-alternate-maker make-glyph glyph)
 
@@ -73,8 +75,13 @@
 (defun glyph-pos/display (glyph)
   (mapcar (lambda (coord) (if (atom coord) coord (first coord))) (glyph-pos glyph)))
 
+(defun glyph-pos/display* (glyph)
+  (handler-case
+      (format nil "~:[~;~1:*~{~a~a~}~]" (commatize (glyph-pos/display glyph) "."))
+    (error () "")))
+
 (defun sort-by-pos (glyphs)
-  (sort glyphs #'pos<= :key #'glyph-pos/values))
+  (sort (copy-seq glyphs) #'pos<= :key #'glyph-pos/values))
 
 (defun digits? (string)
   (ppcre:scan "[0-9]+" string))

@@ -21,6 +21,25 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 	$scope.refresh();
     }])
 
+    .controller('chartCtrl', ['$scope', '$rootScope', '$http', function($scope, $rootScope, $http) {
+	$scope.refresh = function() {
+	    $http.get('/chart.json', {params: {"OID": $scope.chartOid}})
+		.success(function(data) {
+		    $scope.chart = data;
+		    $rootScope.name = $scope.chart.name;
+		})
+		.error(function() {
+		    $rootScope.name = "Chart not found";
+		});
+	};
+    }])
+
+    .directive('nabuGlyph', function() {
+	return {
+	    restrict: 'E',
+	    templateUrl: '/static/ng/glyph.html'
+	};
+    })
     .directive('nabuGlyphEdit', function() {
 	return {
 	    restrict: 'E',

@@ -25,6 +25,15 @@
   (cdr (assoc name parsed :test #'string=)))
 
 
+(defmacro {setf-angular} (var value &optional (string? t))
+  "Create an element that will set a variable in AngularJS"
+  `(htm
+    (:span :style "display:none"
+	   :ng-init ,(if string?
+			 `(format nil "~a=\"~a\"" ,var ,value)
+			 `(format nil "~a=~a" ,var ,value)))))
+
+
 (defvar *bad-default-shell* nil)
 
 (defun open-storage ()
@@ -178,31 +187,22 @@
 
 (defmacro {glyph} (glyph)
   `(let ((uri (glyph-url ,glyph))
-	 (pos (handler-case
-		  (format nil "~:[~;~1:*~{~a~a~}~]"
-			  (commatize (glyph-pos/display ,glyph) "."))
-		(error () ""))))
+	 (pos (glyph-pos/display* ,glyph)))
      (htm (:img :data-toggle "tooltip" :data-placement "right"
 		:title pos :src uri))))
 
 (defroute "/chart" (&key oid)
-  (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-    (progn
-      (nabu-page (cmb-name combined)
-	({row} ({active} ("warning") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit") " "
-	       ({active} ("danger") (format nil "/rm-chart?OID=~a" (urlencode oid)) "Remove"))
-	:hr
-	({row}
+  (nabu-page "{{name}}"
+    (:div :ng-controller "chartCtrl"
+	  ({setf-angular} "chartOid" oid)
+	  (:span :ng-init "refresh()")
+	  ({row} ({active} ("warning") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit") " "
+		 ({active} ("danger") (format nil "/rm-chart?OID=~a" (urlencode oid)) "Remove"))
+	  :hr
 	  (:table :class "table table-hover"
-		  (maphash (lambda (char glyphs)
-			     (htm (:tr
-				   (:td (str char))
-				   (:td
-				    (dolist (glyph (sort-by-pos glyphs))
-				      ({glyph} glyph))))))
-			   (cmb-ab combined))))))
-    (progn
-      (combined-404 oid))))
+		  (:tr :ng-repeat "entry in chart.alphabet"
+		       (:td "{{entry.char}}")
+		       (:td (:nabu-glyph :ng-repeat "glyph in entry.glyphs")))))))
 
 (defun oids->query (param oids)
   (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))

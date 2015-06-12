@@ -16,6 +16,13 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
+
+(defmethod encode-json ((object puri:uri) &optional stream)
+  (princ #\" stream)
+  (puri:render-uri object stream)
+  (princ #\" stream))
+
+
 (defroute "/units.json" ()
   (json:encode-json-to-string (shell-list *bad-default-shell* "units")))
 
@@ -66,3 +73,31 @@
 	      (progn
 		(store-new t)
 		(done unit-oid "has been created" "creation"))))))))
+
+(defroute "/chart.json" (&key oid)
+  (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+    (with-output-to-string (*json-output*)
+      (with-object ()
+	(encode-object-member :name (cmb-name combined))
+	(as-object-member (:alphabet)
+	  (with-array ()
+	    (maphash (lambda (char glyphs)
+		       (let ((max-baseline 0))
+			 (as-array-member ()
+			   (with-object ()
+			     (encode-object-member :char char)
+			     (as-object-member (:glyphs)
+			       (with-array ()
+				 (dolist (glyph glyphs)
+				   (when (> (glyph-bl glyph) max-baseline)
+				     (setf max-baseline (glyph-bl glyph)))
+				   (push (glyph-bl glyph) *leak*)
+				   (as-array-member ()
+				     (with-object ()
+				       (encode-object-member :url (glyph-url glyph))
+				       (encode-object-member :pos (glyph-pos/display* glyph))
+				       (encode-object-member :baseline-offset (glyph-bl glyph)))))))
+			     (encode-object-member :max-baseline-offset max-baseline)))))
+		     (cmb-ab combined))))))
+    (progn
+      (combined-404 oid))))

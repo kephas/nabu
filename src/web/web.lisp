@@ -61,7 +61,7 @@
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body
-	(:script :src "/static/js/jquery.min.js")
+	(:script :src "/static/js/jquery.js")
 	(:script :src "/static/js/bootstrap.js")
 	(:script :src "/static/js/angular.js")
 	(:script :src "/static/js/angular-animate.js")

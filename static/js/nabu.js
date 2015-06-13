@@ -1,6 +1,6 @@
 var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 
-    .controller('unitsCtrl', ['$scope', '$http', 'alerts', function($scope, $http, alerts) {
+    .controller('unitsCtrl', function($scope, $http, alerts) {
 	$scope.refresh = function () {
 	    $http.get('/units.json').success(function(data) { $scope.shellList = data; });
 	};
@@ -19,9 +19,9 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 	};
 
 	$scope.refresh();
-    }])
+    })
 
-    .controller('chartCtrl', ['$scope', '$rootScope', '$http', function($scope, $rootScope, $http) {
+    .controller('chartCtrl', function($scope, $rootScope, $http) {
 	$scope.refresh = function() {
 	    $http.get('/chart.json', {params: {"OID": $scope.chartOid}})
 		.success(function(data) {
@@ -32,9 +32,9 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 		    $rootScope.name = "Chart not found";
 		});
 	};
-    }])
+    })
 
-    .controller('chartEditCtrl', ['$scope', '$rootScope', '$http', function($scope, $rootScope, $http) {
+    .controller('chartEditCtrl', function($scope, $rootScope, $http) {
 	$scope.refresh = function() {
 	    $http.get('/chart.json', {params: {"OID": $scope.chartOid}})
 		.success(function(data) {
@@ -69,7 +69,7 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 		";filter:alpha(opacity=" + alpha * 100 + ")";
 	};
 
-    }])
+    })
 
     .directive('nabuGlyph', function() {
 	return {

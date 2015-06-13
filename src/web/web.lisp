@@ -122,7 +122,7 @@
 		 (:div :class "form-group"
 		       ({row} :ng-repeat "item in shellList"
 			      ({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
-		       ({row}
+		       ({row} :ng-show "shellList.length > 1"
 			 ({col} 12 6
 			   (:div :class "input-group"
 				 (:label :class "input-group-addon" "Chart name:")

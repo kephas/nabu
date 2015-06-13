@@ -24,7 +24,9 @@
 
 
 (defroute "/units.json" ()
-  (json:encode-json-to-string (shell-list *bad-default-shell* "units")))
+  (if-let (units (shell-list *bad-default-shell* "units"))
+    (json:encode-json-to-string units)
+    "[]"))
 
 (defroute ("/addunit.json" :method :POST) (&key uri)
   (labels ((result (success? format &rest arguments)

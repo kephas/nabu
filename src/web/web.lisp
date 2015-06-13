@@ -204,6 +204,20 @@
 		       (:td "{{entry.char}}")
 		       (:td (:nabu-glyph :ng-repeat "glyph in entry.glyphs")))))))
 
+(defroute "/edit-chart" (&key oid)
+  (nabu-page "{{name}}"
+    (:div :ng-controller "chartEditCtrl"
+	  ({setf-angular} "chartOid" oid)
+	  (:span :ng-init "refresh()")
+	  ({row} ({active} ("info") (format nil "/chart?OID=~a" (urlencode oid)) "View") " "
+		 ({active} ("warning") (format nil "/rm-chart?OID=~a" (urlencode oid))
+		   :ng-click "save()" "Save modifications"))
+	  :hr
+	  (:table :class "table table-hover"
+		  (:tr :ng-repeat "entry in chart.alphabet"
+		       (:td "{{entry.char}}")
+		       (:td (:nabu-glyph-edit :ng-repeat "glyph in entry.glyphs")))))))
+
 (defun oids->query (param oids)
   (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))
 

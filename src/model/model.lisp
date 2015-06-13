@@ -51,8 +51,9 @@
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)
+   (id :initarg :id :reader glyph-id)
    (baseline :initarg :bl :reader glyph-bl))
-  (:default-initargs :bl 0))
+  (:default-initargs :id (make-oid) :bl 0))
 
 (define-alternate-maker make-glyph glyph)
 
@@ -144,7 +145,8 @@
 (defclass combined ()
   ((name :initarg :name :reader cmb-name)
    (units :initarg :units :reader cmb-units)
-   (alphabet :initarg :ab :reader cmb-ab)))
+   (alphabet :initarg :ab :reader cmb-ab)
+   (inactive-glyphs :initform nil :reader cmb-inactive)))
 
 (defclass unit-chart (combined) ())
 
@@ -158,6 +160,9 @@
 		       (dolist (unit units combined)
 			 (dolist (glyph (unit-glyphs unit))
 			   (push glyph (gethash (glyph-char glyph) combined)))))))
+
+(defun glyph-active-in-chart? (glyph chart)
+  (not (find glyph (cmb-inactive chart))))
 
 (defun ab-union (combineds)
   "Return the union of the alphabets of several combineds, as a sorted list of chars"

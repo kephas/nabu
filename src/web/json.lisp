@@ -96,6 +96,8 @@
 				   (push (glyph-bl glyph) *leak*)
 				   (as-array-member ()
 				     (with-object ()
+				       (encode-object-member :id (glyph-id glyph))
+				       (encode-object-member :active (glyph-active-in-chart? glyph combined))
 				       (encode-object-member :url (glyph-url glyph))
 				       (encode-object-member :pos (glyph-pos/display* glyph))
 				       (encode-object-member :baseline-offset (glyph-bl glyph)))))))

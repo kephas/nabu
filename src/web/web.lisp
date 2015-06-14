@@ -200,18 +200,19 @@
 		 ({active} ("danger") (format nil "/rm-chart?OID=~a" (urlencode oid)) "Remove"))
 	  :hr
 	  (:table :class "table table-hover"
-		  (:tr :ng-repeat "entry in chart.alphabet"
+		  (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
 		       (:td "{{entry.char}}")
-		       (:td (:nabu-glyph :ng-repeat "glyph in entry.glyphs")))))))
+		       (:td :style "display:flex;align-items:flex-end"
+			    (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active")))))))
 
 (defroute "/edit-chart" (&key oid)
   (nabu-page "{{name}}"
     (:div :ng-controller "chartEditCtrl"
 	  ({setf-angular} "chartOid" oid)
 	  (:span :ng-init "refresh()")
+	  (:nabu-alerts)
 	  ({row} ({active} ("info") (format nil "/chart?OID=~a" (urlencode oid)) "View") " "
-		 ({active} ("warning") (format nil "/rm-chart?OID=~a" (urlencode oid))
-		   :ng-click "save()" "Save modifications"))
+		 ({button} ("warning") :ng-click "submit()" "Save modifications"))
 	  :hr
 	  (:table :class "table table-hover"
 		  (:tr :ng-repeat "entry in chart.alphabet"

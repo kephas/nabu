@@ -34,7 +34,7 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 	};
     })
 
-    .controller('chartEditCtrl', function($scope, $rootScope, $http) {
+    .controller('chartEditCtrl', function($scope, $rootScope, $http, alerts) {
 	$scope.refresh = function() {
 	    $http.get('/chart.json', {params: {"OID": $scope.chartOid}})
 		.success(function(data) {
@@ -45,6 +45,8 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 		    $rootScope.name = "Chart not found";
 		});
 	};
+
+	alerts.makeAvailable($scope);
 
 	var focusedGlyph;
 	$scope.focusGlyph = function(id) {
@@ -69,6 +71,15 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 		";filter:alpha(opacity=" + alpha * 100 + ")";
 	};
 
+	$scope.submit = function() {
+	    $http.post('/chart.json', $scope.chart, {params: {"OID": $scope.chartOid}})
+		.success(function() {
+		    alerts.add({type: "success", message: "Modifications saved."});
+		})
+		.error(function() {
+		    alerts.add({type: "danger", message: "An error occurred while trying to save modifications."});
+		});
+	};
     })
 
     .directive('nabuGlyph', function() {

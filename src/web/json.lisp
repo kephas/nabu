@@ -25,7 +25,7 @@
 
 (defroute "/units.json" ()
   (if-let (units (shell-list *bad-default-shell* "units"))
-    (json:encode-json-to-string units)
+    (encode-json-to-string units)
     "[]"))
 
 (defroute ("/addunit.json" :method :POST) (&key uri)
@@ -110,21 +110,21 @@
     (progn
       (combined-404 oid))))
 
-(defroute ("/chart.json" :method :POST) (&key oid json)
+(defroute ("/chart.json" :method :POST) (&key oid)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-    (let* ((%alphabet (gethash "alphabet" json))
-	   (%glyphs (gethash "glyphs" (first %alphabet))))
+    (let* ((%alphabet (clack.request:body-parameter *request* "alphabet"))
+	   (%glyphs (getjso "glyphs" (first %alphabet))))
       (let@ rec ((%glyph (first %glyphs))
 		 (%glyphs (rest %glyphs))
 		 (chars (rest %alphabet))
 		 (inactives nil))
-	(let* ((glyph (cmb-find-glyph combined (gethash "id" %glyph)))
-	       (inactives (if (gethash "active" %glyph) inactives (cons glyph inactives))))
-	  (setf (glyph-bl glyph) (gethash "baselineOffset" %glyph))
+	(let* ((glyph (cmb-find-glyph combined (getjso "id" %glyph)))
+	       (inactives (if (from-json-bool (getjso "active" %glyph)) inactives (cons glyph inactives))))
+	  (setf (glyph-bl glyph) (getjso "baselineOffset" %glyph))
 	  (if %glyphs
 	      (rec (first %glyphs) (rest %glyphs) chars inactives)
 	      (if chars
-		  (let ((%glyphs (gethash "glyphs" (first chars))))
+		  (let ((%glyphs (getjso "glyphs" (first chars))))
 		    (rec (first %glyphs) (rest %glyphs) (rest chars) inactives))
 		  (progn
 		    (setf (cmb-inactive combined) inactives)

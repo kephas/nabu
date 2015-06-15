@@ -17,6 +17,9 @@
 (in-package :nothos.net/2014.05.nabu)
 
 
+(defmethod encode-json ((object (eql :false)) &optional stream)
+  (princ "false" stream))
+
 (defmethod encode-json ((object puri:uri) &optional stream)
   (princ #\" stream)
   (puri:render-uri object stream)
@@ -100,7 +103,7 @@
 				       (as-array-member ()
 					 (with-object ()
 					   (encode-object-member :id (glyph-id glyph))
-					   (encode-object-member :active active?)
+					   (encode-object-member :active (if active? t :false))
 					   (encode-object-member :url (glyph-url glyph))
 					   (encode-object-member :pos (glyph-pos/display* glyph))
 					   (encode-object-member :baseline-offset (glyph-bl glyph))))))))

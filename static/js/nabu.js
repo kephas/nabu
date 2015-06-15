@@ -8,7 +8,7 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 	alerts.makeAvailable($scope);
 
 	$scope.submit = function() {
-	    $http.post('/addunit.json', '', {params: {"URI": $scope.manifestUri}})
+	    $http.post('/addunit.json', '{}', {params: {"URI": $scope.manifestUri}})
 		.success(function(data) {
 		    alerts.add(data);
 		    $scope.refresh();

@@ -214,11 +214,15 @@
 (ele:defpclass glyph/ele (glyph w/metadata/ele)
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
-   (image :initarg :img :reader glyph-img)))
+   (image :initarg :img :reader glyph-img)
+   (id :initarg :id :reader glyph-id)
+   (baseline :initarg :bl :accessor glyph-bl))
+  (:default-initargs :id (make-oid) :bl 0))
 
 (ele:defpclass combined/ele (combined)
   ((name :initarg :name :reader cmb-name)
    (units :initarg :units :reader cmb-units)
-   (alphabet :initarg :ab :reader cmb-ab)))
+   (alphabet :initarg :ab :reader cmb-ab)
+   (inactive-glyphs :initform nil :accessor cmb-inactive)))
 
 (ele:defpclass unit-chart/ele (combined/ele unit-chart) ())

@@ -103,6 +103,7 @@
        (with-output-to-string (*json-output*)
 	 (with-object ()
 	   (encode-object-member :name (cmb-name combined))
+	   (encode-object-member :scale (cmb-scale combined))
 	   (as-object-member (:alphabet)
 	     (if ab/obj?
 		 (with-object ()
@@ -144,8 +145,9 @@
 
 (defroute ("/chart.json" :method :POST) (&key oid)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-    (let* ((%alphabet (clack.request:body-parameter *request* "alphabet"))
+    (let* ((%alphabet (body-parameter *request* "alphabet"))
 	   (%glyphs (getjso "glyphs" (first %alphabet))))
+      (setf (cmb-scale combined) (body-parameter *request* "scale"))
       (let@ rec ((%glyph (first %glyphs))
 		 (%glyphs (rest %glyphs))
 		 (chars (rest %alphabet))

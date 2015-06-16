@@ -214,6 +214,9 @@
 	  ({row} ({active} ("info") (format nil "/chart?OID=~a" (urlencode oid)) "View") " "
 		 ({button} ("warning") :ng-click "submit()" "Save modifications"))
 	  :hr
+	  #|(:div :class "input-group"
+		     (:label :class "input-group-addon" "Scale ")
+		     (:input :type "number" :ng-model "chart.scale"))|#
 	  (:table :class "table table-hover"
 		  (:tr :ng-repeat "entry in chart.alphabet"
 		       (:td "{{entry.char}}")

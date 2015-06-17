@@ -55,7 +55,7 @@
        (:title (fmt "NABU - ~a" ,title))
        (:meta :name "viewport" :content "width=device-width")
        (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
-       (:style :type "text/css" "body {margin: 4em 2em;}"))
+       (:link :href "/static/css/local.css" :rel "stylesheet"))
       (:body
        ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
 	((:div :class "container")

@@ -158,7 +158,7 @@
 			  ({checkbox} "OIDS[]" oid
 			    ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
 			    " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
-			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) "Remove")))))
+			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) :disabled "disabled" "Remove")))))
 		(remove-used-unit-charts (shell-list *bad-default-shell* "combineds") :key #'second))
 	   (when (shell-list *bad-default-shell* "combineds")
 	     (htm ({submit} ("primary") "Compare charts"))))))

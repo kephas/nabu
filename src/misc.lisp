@@ -56,7 +56,8 @@
 	(reverse (cons end (rest result))))))
 
 (defun make-oid ()
-  (base64:usb8-array-to-base64-string (uuid:uuid-to-byte-array (uuid:make-v4-uuid))))
+  (with-output-to-string (out)
+    (uuid:print-bytes out (uuid:make-v4-uuid))))
 
 (defun swap-left (item list &key (test #'equal))
   (with-lisp1 (test)

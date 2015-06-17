@@ -79,7 +79,7 @@
 		(store-new t)
 		(done unit-oid "has been created" "creation"))))))))
 
-(defun encode-chart-to-json (combined ab/obj?)
+(defun encode-chart-to-json (combined oid ab/obj?)
   (let ((max-baselines (make-hash-table :test 'equal)))
     (labels ((glyphs-list (glyphs)
 	       (let ((max-baseline 0)
@@ -103,6 +103,7 @@
        (with-output-to-string (*json-output*)
 	 (with-object ()
 	   (encode-object-member :name (cmb-name combined))
+	   (encode-object-member :oid oid)
 	   (encode-object-member :scale (cmb-scale combined))
 	   (as-object-member (:alphabet)
 	     (if ab/obj?
@@ -139,7 +140,7 @@
 
 (defroute "/chart.json" (&key oid)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-    (encode-chart-to-json combined nil)
+    (encode-chart-to-json combined oid nil)
     (progn
       (combined-404 oid))))
 
@@ -176,7 +177,7 @@
 	  (with-array ()
 	    (dolist (oid oids)
 	      (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-		(bind (((:values chart local-max-baselines) (encode-chart-to-json combined t)))
+		(bind (((:values chart local-max-baselines) (encode-chart-to-json combined oid t)))
 		  (push combined charts)
 		  (maphash (lambda (char value)
 			     (when (> value (gethash char max-baselines 0))

@@ -226,51 +226,25 @@
   (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))
 
 (defroute "/compare" (&key _parsed)
-  (let ((request-oids (get-parsed :oids _parsed)))
-    (bind (((:values combineds oids+names)
-	    (let@ rec ((oids request-oids)
-		       (combineds)
-		       (oids+names))
-	      (if oids
-		  (let ((oid (first oids)))
-		    (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-		      (rec (rest oids)
-			   (cons combined combineds)
-			   (cons (list oid (cmb-name combined)) oids+names))
-		      (rec (rest oids) combineds oids+names)))
-		  (values (reverse combineds) (reverse oids+names)))))
-	   (oids (mapcar #'first oids+names))
-	   (union (ab-union combineds)))
-      (flet ((other-uri (oids)
-	       (format nil "/compare?~a" (oids->query "OIDS[]" oids))))
-	(nabu-page "Comparative chart"
-	  (:div
-	   (let@ rec ((oid (caar oids+names))
-		      (name (cadar oids+names))
-		      (next (cdr oids+names))
-		      (first t))
-	     (unless first
-	       ({active} ("default" :size "xs") (other-uri (swap-left oid oids)) "<"))
-	     (htm ({active} ("default" :size "sm") (format nil "/chart?OID=~a" (urlencode oid)) (str name)) " ")
-	     (when next
-	       ({active} ("default" :size "xs") (other-uri (swap-right oid oids)) ">")
-	       (htm "   ")
-	       (rec (caar next) (cadar next) (cdr next) nil))))
-	:hr
-	((:table :class "table table-hover table-bordered")
-	 (:thead
-	  (:tr
-	   (:th " ")
-	   (dolist (oid+name oids+names)
-	     (htm (:th (str (second oid+name)))))))
-	 (:tbody
-	  (dolist (char union)
-	    (htm (:tr
-		  (:td (str char))
-		  (dolist (combined combineds)
-		    (htm (:td
-			  (dolist (glyph (sort-by-pos (gethash char (cmb-ab combined))))
-			    ({glyph} glyph)))))))))))))))
+  (let ((oids (get-parsed :oids _parsed)))
+    (nabu-page "Comparative chart"
+      (:div :ng-controller "chartCompareCtrl"
+	    ({setf-angular} "oidsParams" (with-output-to-string (out)
+					   (dolist (oid oids)
+					     (format out "OIDS[]=~a&" (urlencode oid)))))
+	    (:span :ng-init "download()")
+	    (:chart-reorder :ng-repeat "chart in comparison.charts")
+	    :hr
+	    ((:table :class "table table-hover table-bordered")
+	     (:thead
+	      (:tr
+	       (:th "")
+	       (:th :ng-repeat "chart in comparison.charts" "{{chart.name}}"))
+	      (:tr :ng-repeat "char in comparison.chars"
+		   :ng-init "entry={maxBaselineOffset: comparison.maxBaselineOffsets[char]}"
+		   (:td "{{char}}")
+		   (:td :ng-repeat "chart in comparison.charts"
+			(:nabu-glyph :ng-repeat "glyph in chart.alphabet[char].glyphs")))))))))
 
 (defroute "/rm-chart" (&key oid redirect)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))

@@ -1,0 +1,7 @@
+<span>
+  <span ng-show="!$first">   
+    <button class="btn btn-xs btn-primary" ng-click="move($index, -1)">&lt;</button>
+  </span>
+  <button class="btn btn-default" disabled="disabled">{{chart.name}}</button>
+  <button class="btn btn-xs btn-primary" ng-show="!$last" ng-click="move($index, 1)">&gt;</button>
+</span>

@@ -93,4 +93,30 @@ var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
 	    restrict: 'E',
 	    templateUrl: '/static/ng/glyph-editor.html'
 	};
+    })
+
+    .controller('chartCompareCtrl', function($scope, $http, $timeout, alerts) {
+	$scope.download = function() {
+	    $http.get('/charts.json?' + $scope.oidsParams)
+		.success(function(data) {
+		    $scope.comparison = data;
+		})
+		.error(function() {
+		    alerts.add({type: "danger", message: "An error occurred while trying to retrieve the charts."});
+		});
+	};
+
+	$scope.move = function(index, shift) {
+	    var removed = $scope.comparison.charts.splice(index, 1);
+	    $timeout(function() {
+		$scope.comparison.charts.splice(index + shift, 0, removed[0]);
+	    }, 500);
+	};
+    })
+
+    .directive('chartReorder', function() {
+	return {
+	    restrict: 'E',
+	    templateUrl: '/static/ng/chart-reorder.html'
+	};
     });

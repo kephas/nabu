@@ -147,7 +147,8 @@
    (units :initarg :units :reader cmb-units)
    (scale :initarg :scale :accessor cmb-scale)
    (alphabet :initarg :ab :reader cmb-ab)
-   (inactive-glyphs :initform nil :accessor cmb-inactive))
+   (inactive-glyphs :initform nil :accessor cmb-inactive)
+   (public-oid :initform nil :accessor cmb-public))
   (:default-initargs :scale 100))
 
 (defclass unit-chart (combined) ())
@@ -226,7 +227,8 @@
    (units :initarg :units :reader cmb-units)
    (scale :initarg :scale :accessor cmb-scale)
    (alphabet :initarg :ab :reader cmb-ab)
-   (inactive-glyphs :initform nil :accessor cmb-inactive))
+   (inactive-glyphs :initform nil :accessor cmb-inactive)
+   (public-oid :initform nil :accessor cmb-public))
   (:default-initargs :scale 100))
 
 (ele:defpclass unit-chart/ele (combined/ele unit-chart) ())

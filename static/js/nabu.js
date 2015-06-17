@@ -23,7 +23,7 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 
     .controller('chartCtrl', function($scope, $rootScope, $http) {
 	$scope.refresh = function() {
-	    $http.get('/chart.json', {params: {"OID": $scope.chartOid}})
+	    $http.get('/chart.json', {params: {"OID": $scope.chartOid, "PUBLIC": $scope.public}})
 		.success(function(data) {
 		    $scope.chart = data;
 		    $rootScope.name = $scope.chart.name;
@@ -78,6 +78,20 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 		})
 		.error(function() {
 		    alerts.add({type: "danger", message: "An error occurred while trying to save modifications."});
+		});
+	};
+
+	$scope.publish = function() {
+	    $http.post('/pub-chart.json', {oid: $scope.chart.oid})
+		.success(function(data) {
+		    $scope.chart.publicOid = data.publicOid;
+		});
+	};
+
+	$scope.unpublish = function() {
+	    $http.post('/unpub-chart.json', {oid: $scope.chart.oid})
+		.success(function() {
+		    $scope.chart.publicOid = false;
 		});
 	};
     })

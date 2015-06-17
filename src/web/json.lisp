@@ -105,6 +105,7 @@
 	   (encode-object-member :name (cmb-name combined))
 	   (encode-object-member :oid oid)
 	   (encode-object-member :scale (cmb-scale combined))
+	   (encode-object-member :public-oid (cmb-public combined))
 	   (as-object-member (:alphabet)
 	     (if ab/obj?
 		 (with-object ()
@@ -138,8 +139,8 @@
 			    (cmb-ab combined)))))))
        max-baselines))))
 
-(defroute "/chart.json" (&key oid)
-  (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+(defroute "/chart.json" (&key oid public)
+  (if-let (combined (shell-object (if public *public-shell* *bad-default-shell*) "combineds" oid))
     (encode-chart-to-json combined oid nil)
     (progn
       (combined-404 oid))))
@@ -165,6 +166,28 @@
 		    (setf (cmb-inactive combined) inactives)
 		    "{}"))))))
     (combined-404 oid)))
+
+(defroute ("/pub-chart.json" :method :POST) ()
+  (let ((oid (body-parameter *request* "oid")))
+    (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+      (if-let (public-oid (cmb-public combined))
+	(encode-json-plist-to-string (list :public-oid public-oid))
+	(let ((new-oid (make-oid)))
+	  (setf (shell-object *public-shell* "combineds" new-oid) combined
+		(cmb-public combined) new-oid)
+	  (encode-json-plist-to-string (list :public-oid new-oid))))
+      (combined-404 oid))))
+
+(defroute ("/unpub-chart.json" :method :POST) ()
+  (let ((oid (body-parameter *request* "oid")))
+    (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+      (progn
+	(if-let (public-oid (cmb-public combined))
+	  (progn
+	    (setf (cmb-public combined) nil)
+	    (shell-remove! *public-shell* "combineds" public-oid)))
+	"{}")
+      (combined-404 oid))))
 
 (defroute "/charts.json" (&key _parsed)
   (let ((oids (get-parsed :oids _parsed))

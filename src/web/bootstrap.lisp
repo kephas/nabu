@@ -31,10 +31,10 @@
   (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] ~a" btn-class size classes)))
     `(htm (:button :type "submit" :class ,class ,@body))))
 
-(defmacro {active} ((btn-class &key size (classes "")) href &body body)
+(defmacro {active} ((btn-class &key size (classes "") ng) href &body body)
   (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] active ~a" btn-class size classes)))
     (once-only (href)
-      `(htm (:a :class ,class :href ,href ,@body)))))
+      `(htm (:a :class ,class ,(if ng :ng-href :href) ,href ,@body)))))
 
 (defmacro {button} ((btn-class &key size (classes "")) &body body)
   (let ((class (format nil "btn btn-~a ~:[~;~:*btn-~a~] ~a" btn-class size classes)))

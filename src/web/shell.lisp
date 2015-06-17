@@ -17,7 +17,7 @@
 (in-package :nothos.net/2014.05.nabu)
 
 (defroute "/shell" ()
-  (nabu-page "Shell"
+  (nabu-page ("Shell")
     ((:ul :class "list-unstyled")
      (let@ rec ((object *bad-default-shell*)
 		(path))

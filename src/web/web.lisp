@@ -35,20 +35,26 @@
 
 
 (defvar *bad-default-shell* nil)
+(defvar *public-shell* nil)
+
+(defmacro ensure-shell (var key)
+  `(let ((shell (ele:get-from-root ,key)))
+     (unless shell
+       (setf shell (ele:make-btree))
+       (ele:add-to-root ,key shell))
+     (setf ,var shell)))
 
 (defun open-storage ()
   (case (config* :storage)
     (:memory
-     (setf *bad-default-shell* (make-hash-table :test 'equal)))
+     (setf *bad-default-shell* (make-hash-table :test 'equal))
+     (setf *public-shell* (make-hash-table :test 'equal)))
     (:elephant
      (ele:open-store (config* :ele-store))
-     (let ((shell (ele:get-from-root "bad-default-shell")))
-       (unless shell
-	 (setf shell (ele:make-btree))
-	 (ele:add-to-root "bad-default-shell" shell))
-       (setf *bad-default-shell* shell)))))
+     (ensure-shell *bad-default-shell* "bad-default-shell")
+     (ensure-shell *public-shell* "public-shell"))))
 
-(defmacro nabu-page (title &body body)
+(defmacro nabu-page ((title &key public?) &body body)
   `(with-html-output-to-string (out nil :indent t)
      (:html :ng-app "nabuApp"
       (:head
@@ -62,11 +68,13 @@
 	 ((:div :class "navbar-header")
 	  ({collapse-btn} ".nabu-navbar-collapse")
 	  ((:a :class "navbar-brand" :href "#") "NABU"))
-	 ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
-	  ((:ul :class "nav navbar-nav")
-	   (:li (:a :href "/units" "Units"))
-	   (:li (:a :href "/charts" "Charts"))
-	   (:li (:a :href "/shell" "Shell"))))))
+	 ,(unless public?
+	    `(htm
+	      ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
+	       ((:ul :class "nav navbar-nav")
+		(:li (:a :href "/units" "Units"))
+		(:li (:a :href "/charts" "Charts"))
+		(:li (:a :href "/shell" "Shell"))))))))
        ((:div :class "container")
 	(:h1 (str ,title))
 	,@body
@@ -104,7 +112,7 @@
     (error ())))
 
 (defroute "/units" ()
-  (nabu-page "Units"
+  (nabu-page ("Units")
     (if-let (current-filter (filtering?))
       (htm (:p "Current filter:"
 	       (:code (esc current-filter))
@@ -141,7 +149,7 @@
 	       ({button} ("primary") :ng-click "submit()" "Add")))))))
 
 (defroute "/charts" (&key created removed)
-  (nabu-page "Charts"
+  (nabu-page ("Charts")
     (when removed
       (htm ({alert} ("warning" t) "Chart " (str removed) " removed")))
     (when created
@@ -182,7 +190,7 @@
 
 (defun combined-404 (oid)
   (setf (clack.response:status *response*) 404)
-  (nabu-page "Chart not found"
+  (nabu-page ("Chart not found")
     ({alert} ("warning") "Chart " (:code (str oid)) " not found.")))
 
 (defmacro {glyph} (glyph)
@@ -192,7 +200,7 @@
 		:title pos :src uri))))
 
 (defroute "/chart" (&key oid)
-  (nabu-page "{{name}}"
+  (nabu-page ("{{name}}")
     (:div :ng-controller "chartCtrl"
 	  ({setf-angular} "chartOid" oid)
 	  (:span :ng-init "refresh()")
@@ -206,13 +214,17 @@
 			    (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active")))))))
 
 (defroute "/edit-chart" (&key oid)
-  (nabu-page "{{name}}"
+  (nabu-page ("{{name}}")
     (:div :ng-controller "chartEditCtrl"
 	  ({setf-angular} "chartOid" oid)
 	  (:span :ng-init "refresh()")
 	  (:nabu-alerts)
 	  ({row} ({active} ("info") (format nil "/chart?OID=~a" (urlencode oid)) "View") " "
-		 ({button} ("warning") :ng-click "submit()" "Save modifications"))
+		 ({button} ("warning") :ng-click "submit()" "Save modifications")
+		 ({button} ("warning") :ng-hide "chart.publicOid" :ng-click "publish()" "Make public")
+		 (:span :ng-show "chart.publicOid"
+			({button} ("warning") :ng-click "unpublish()" "Remove public view")
+			({active} ("info" :ng t) "/pub/chart/{{chart.publicOid}}" "Public URL")))
 	  :hr
 	  #|(:div :class "input-group"
 		     (:label :class "input-group-addon" "Scale ")
@@ -227,7 +239,7 @@
 
 (defroute "/compare" (&key _parsed)
   (let ((oids (get-parsed :oids _parsed)))
-    (nabu-page "Comparative chart"
+    (nabu-page ("Comparative chart")
       (:div :ng-controller "chartCompareCtrl"
 	    ({setf-angular} "oidsParams" (with-output-to-string (out)
 					   (dolist (oid oids)
@@ -252,15 +264,35 @@
       (shell-remove! *bad-default-shell* "combineds" oid)
       (if redirect
 	  (redirect *response* (format nil "/charts?REMOVED=~a" (cmb-name combined)))
-	  (nabu-page "Chart removed"
+	  (nabu-page ("Chart removed")
 	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
     (combined-404 oid)))
+
+#|
+
+Public read-only
+
+|#
+
+(defroute "/pub/chart/:oid" (&key oid)
+  (nabu-page ("{{name}}" :public? t)
+    (:div :ng-controller "chartCtrl"
+	  ({setf-angular} "chartOid" oid)
+	  ({setf-angular} "public" "true" nil)
+	  (:span :ng-init "refresh()")
+	  (:table :class "table table-hover"
+		  (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
+		       (:td "{{entry.char}}")
+		       (:td :style "display:flex;align-items:flex-end"
+			    (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active")))))))
+
 
 (defun clackup (port &optional config-file)
   (read-configuration! config-file)
   (open-storage)
   (shell-mksub! *bad-default-shell* "units")
   (shell-mksub! *bad-default-shell* "combineds")
+  (shell-mksub! *public-shell* "combineds")
   (setf drakma:*drakma-default-external-format* :utf8)
   (clack:clackup
    (clack.builder:builder

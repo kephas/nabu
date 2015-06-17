@@ -1,4 +1,4 @@
-var nabuApp = angular.module('nabuApp', ['nabuAlerts', 'nabuDev'])
+var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 
     .controller('unitsCtrl', function($scope, $http, alerts) {
 	$scope.refresh = function () {

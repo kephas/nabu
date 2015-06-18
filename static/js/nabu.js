@@ -65,7 +65,7 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 	    focusedGlyph = null;
 	};
 
-	$scope.glyphOpacity = function(glyph) {
+	$scope.glyphCssOpacity = function(glyph) {
 	    var alpha = glyph.active ? 1 : .5;
 	    return "opacity:" + alpha +
 		";filter:alpha(opacity=" + alpha * 100 + ")";

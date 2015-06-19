@@ -51,9 +51,11 @@
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)
+   (height :initarg :height :accessor glyph-height)
+   (width :initarg :width :accessor glyph-width)
    (id :initarg :id :reader glyph-id)
    (baseline :initarg :bl :accessor glyph-bl))
-  (:default-initargs :id (make-oid) :bl 0))
+  (:default-initargs :id (make-oid) :bl 0 :height 0 :width 0))
 
 (define-alternate-maker make-glyph glyph)
 
@@ -218,6 +220,8 @@
   ((char :initarg :char :reader glyph-char)
    (pos :initarg :pos :reader glyph-pos)
    (image :initarg :img :reader glyph-img)
+   (height :initform 0 :accessor glyph-height)
+   (width :initform 0 :accessor glyph-width)
    (id :initarg :id :reader glyph-id)
    (baseline :initarg :bl :accessor glyph-bl))
   (:default-initargs :id (make-oid) :bl 0))

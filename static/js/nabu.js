@@ -1,5 +1,9 @@
 var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 
+/*
+  Units
+*/
+
     .controller('unitsCtrl', function($scope, $http, alerts) {
 	$scope.refresh = function () {
 	    $http.get('/units.json').success(function(data) { $scope.shellList = data; });
@@ -21,6 +25,11 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 	$scope.refresh();
     })
 
+
+/*
+  Chart view
+*/
+
     .controller('chartCtrl', function($scope, $rootScope, $http) {
 	$scope.refresh = function() {
 	    $http.get('/chart.json', {params: {"OID": $scope.chartOid, "PUBLIC": $scope.public}})
@@ -32,7 +41,27 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 		    $rootScope.name = "Chart not found";
 		});
 	};
+
+	$scope.glyphCssDimensions = function(chart, glyph) {
+	    if (chart.scale == 100) {
+		return "";
+	    } else {
+		return "height:" + Math.round(glyph.height * chart.scale / 100) + "px;"
+		    + "width:" + Math.round(glyph.width * chart.scale / 100) + "px";
+	    }
+	};
     })
+    .directive('nabuGlyph', function() {
+	return {
+	    restrict: 'E',
+	    templateUrl: '/static/ng/glyph.html'
+	};
+    })
+
+
+/*
+  Chart edition
+*/
 
     .controller('chartEditCtrl', function($scope, $rootScope, $http, alerts) {
 	$scope.refresh = function() {
@@ -40,6 +69,9 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 		.success(function(data) {
 		    $scope.chart = data;
 		    $rootScope.name = $scope.chart.name;
+		    if (data.scale != 100) {
+			$scope.scaling = true;
+		    }
 		})
 		.error(function() {
 		    $rootScope.name = "Chart not found";
@@ -71,6 +103,15 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 		";filter:alpha(opacity=" + alpha * 100 + ")";
 	};
 
+	$scope.glyphCssDimensions = function(chart, glyph) {
+	    if (chart.scale == 100) {
+		return "";
+	    } else {
+		return "height:" + Math.round(glyph.height * chart.scale / 100) + "px;"
+		    + "width:" + Math.round(glyph.width * chart.scale / 100) + "px";
+	    }
+	};
+
 	$scope.submit = function() {
 	    $http.post('/chart.json', $scope.chart, {params: {"OID": $scope.chartOid}})
 		.success(function() {
@@ -94,18 +135,48 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
 		    $scope.chart.publicOid = false;
 		});
 	};
-    })
 
-    .directive('nabuGlyph', function() {
-	return {
-	    restrict: 'E',
-	    templateUrl: '/static/ng/glyph.html'
+	/*
+	  Scaling
+	*/
+
+	$scope.dimensions = [];
+	$scope.scaling = false;
+
+	function storeDimensions() {
+	    $scope.dimensions.forEach(function(entry) {
+		entry.glyph.height = entry.height;
+		entry.glyph.width = entry.width;
+	    });
+	};
+
+	$scope.activateScaling = function() {
+	    $scope.scaling = true;
+
+	    // only store them here because if scaling was already on,
+	    // images wouldn't have their original size
+	    storeDimensions();
 	};
     })
+
     .directive('nabuGlyphEdit', function() {
 	return {
 	    restrict: 'E',
 	    templateUrl: '/static/ng/glyph-editor.html'
+	};
+    })
+    .directive('dimensionMonitor', function() {
+	return {
+	    restrict: 'A',
+	    link: function(scope, element, attr) {
+		element.on('load', function() {
+		    scope.dimensions.push({
+			glyph: scope.glyph,
+			height: element.height(),
+			width: element.width()
+		    });
+		});
+	    }
 	};
     })
 

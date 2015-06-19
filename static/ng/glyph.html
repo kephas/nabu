@@ -1,1 +1,1 @@
-<img style="margin-bottom:{{entry.maxBaselineOffset - glyph.baselineOffset}}px" data-toggle="tooltip" data-placement="right" title="{{::glyph.pos}}" ng-src="{{::glyph.url}}"/>
+<img style="{{glyphCssDimensions(chart, glyph)}};margin-bottom:{{(entry.maxBaselineOffset - glyph.baselineOffset)*(chart.scale/100)}}px" data-toggle="tooltip" data-placement="right" title="{{::glyph.pos}}" ng-src="{{::glyph.url}}"/>

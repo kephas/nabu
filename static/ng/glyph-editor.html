@@ -2,8 +2,8 @@
 
 <div style="position:relative" ng-click="focusGlyph(glyph.id)" ng-dblclick="toggleGlyph(glyph)">
   <img data-toggle="tooltip" data-placement="right" title="{{::glyph.pos}}" ng-src="{{::glyph.url}}"
-  style="{{glyphOpacity(glyph)}}"/>
-  <div style="border-top:solid red 1px;position:absolute;bottom:0px;height:{{glyph.baselineOffset}}px;width:100%"></div>
+  style="{{glyphCssOpacity(glyph)}};{{glyphCssDimensions(chart, glyph)}}" dimension-monitor=""/>
+  <div style="border-top:solid red 1px;position:absolute;bottom:0px;height:{{glyph.baselineOffset * (chart.scale/100)}}px;width:100%"></div>
 </div>
 
 <div ng-show="isFocused(glyph.id)">

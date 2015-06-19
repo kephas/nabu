@@ -226,9 +226,11 @@
 			({button} ("warning") :ng-click "unpublish()" "Remove public view")
 			({active} ("info" :ng t) "/pub/chart/{{chart.publicOid}}" "Public URL")))
 	  :hr
-	  #|(:div :class "input-group"
-		     (:label :class "input-group-addon" "Scale ")
-		     (:input :type "number" :ng-model "chart.scale"))|#
+	  ({button} ("warning") :ng-hide "scaling" :ng-click "activateScaling()" "Scale images")
+	  (:div :class "input-group" :ng-show "scaling"
+		(:label :class "input-group-addon" "Scale ")
+		(:input :type "number" :ng-model "chart.scale"))
+	  :hr
 	  (:table :class "table table-hover"
 		  (:tr :ng-repeat "entry in chart.alphabet"
 		       (:td "{{entry.char}}")

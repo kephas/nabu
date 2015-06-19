@@ -92,6 +92,8 @@
 			   (encode-object-member :active (if active? t :false))
 			   (encode-object-member :url (glyph-url glyph))
 			   (encode-object-member :pos (glyph-pos/display* glyph))
+			   (encode-object-member :height (glyph-height glyph))
+			   (encode-object-member :width (glyph-width glyph))
 			   (encode-object-member :baseline-offset (glyph-bl glyph)))))))
 		 (values max-baseline any-active?))))
       (values
@@ -151,7 +153,9 @@
 		 (inactives nil))
 	(let* ((glyph (cmb-find-glyph combined (getjso "id" %glyph)))
 	       (inactives (if (from-json-bool (getjso "active" %glyph)) inactives (cons glyph inactives))))
-	  (setf (glyph-bl glyph) (getjso "baselineOffset" %glyph))
+	  (setf (glyph-bl glyph) (getjso "baselineOffset" %glyph)
+		(glyph-height glyph) (getjso "height" %glyph)
+		(glyph-width glyph) (getjso "width" %glyph))
 	  (if %glyphs
 	      (rec (first %glyphs) (rest %glyphs) chars inactives)
 	      (if chars

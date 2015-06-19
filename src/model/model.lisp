@@ -112,7 +112,7 @@
 	    (rec (first specs)
 		 (rest specs)
 		 (cons (make-glyph
-			:img `(:uri ,(puri:merge-uris (car spec) uri))
+			:img (list :uri (puri->string (puri:merge-uris (car spec) uri)))
 			:char (cadr spec)
 			:pos (cddr spec))
 		       glyphs))
@@ -130,7 +130,7 @@
 	    (rec (first specs)
 		 (rest specs)
 		 (cons (make-glyph
-			:img `(:uri ,(puri:merge-uris (first spec) uri))
+			:img (list :uri (puri->string (puri:merge-uris (first spec) uri)))
 			:char (second spec)
 			:pos (parse-glyph-pos (third spec))
 			:meta (alist->hash (fourth spec)))

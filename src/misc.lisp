@@ -104,3 +104,7 @@
 						     (- result digit)
 						     (+ result digit)))
 	  result))))
+
+(defun puri->string (puri)
+  (with-output-to-string (out)
+    (puri:render-uri puri out)))

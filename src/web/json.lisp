@@ -20,11 +20,6 @@
 (defmethod encode-json ((object (eql :false)) &optional stream)
   (princ "false" stream))
 
-(defmethod encode-json ((object puri:uri) &optional stream)
-  (princ #\" stream)
-  (puri:render-uri object stream)
-  (princ #\" stream))
-
 
 (defroute "/units.json" ()
   (if-let (units (shell-list *bad-default-shell* "units"))

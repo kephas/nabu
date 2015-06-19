@@ -54,42 +54,52 @@
      (ensure-shell *bad-default-shell* "bad-default-shell")
      (ensure-shell *public-shell* "public-shell"))))
 
+(eval-when (:compile-toplevel :load-toplevel)
+  (defparameter *js-scripts* '("jquery" "bootstrap" "angular" "angular-animate" "angular-aria"
+			       "angular-sanitize"
+			       "alerts" "test" "nabu")))
+
+(eval-when (:compile-toplevel :load-toplevel)
+  (defun js-scripts ()
+    (let@ rec ((scripts (reverse *js-scripts*))
+	       (markup))
+      (if scripts
+	  (rec (rest scripts)
+	       (cons (list :script :src (format nil "/static/js/~a.js" (first scripts))) markup))
+	  markup))))
+
+(defvar *nav-links* '(("/units" "Units")
+		      ("/charts" "Charts")
+		      ("/shell" "Shell")))
+
+(defun nav-links (stream)
+  (dolist (link *nav-links*)
+    (with-html-output (out stream)
+      (:li (:a :href (first link) (str (second link)))))))
+
 (defmacro nabu-page ((title &key public?) &body body)
   `(with-html-output-to-string (out nil :indent t)
      (:html :ng-app "nabuApp"
-      (:head
-       (:title (fmt "NABU - ~a" ,title))
-       (:meta :name "viewport" :content "width=device-width")
-       (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
-       (:link :href "/static/css/local.css" :rel "stylesheet"))
-      (:body
-       ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
-	((:div :class "container")
-	 ((:div :class "navbar-header")
-	  ({collapse-btn} ".nabu-navbar-collapse")
-	  ((:a :class "navbar-brand" :href "#") "NABU"))
-	 ,(unless public?
-	    `(htm
-	      ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
-	       ((:ul :class "nav navbar-nav")
-		(:li (:a :href "/units" "Units"))
-		(:li (:a :href "/charts" "Charts"))
-		(:li (:a :href "/shell" "Shell"))))))))
-       ((:div :class "container")
-	(:h1 (str ,title))
-	,@body
-	(:script :src "/static/js/jquery.js")
-	(:script :src "/static/js/bootstrap.js")
-	(:script :src "/static/js/angular.js")
-	(:script :src "/static/js/angular-animate.js")
-	(:script :src "/static/js/angular-aria.js")
-	(:script :src "/static/js/angular-cookies.js")
-	(:script :src "/static/js/angular-messages.js")
-	(:script :src "/static/js/angular-route.js")
-	(:script :src "/static/js/angular-sanitize.js")
-	(:script :src "/static/js/alerts.js")
-	(:script :src "/static/js/test.js")
-	(:script :src "/static/js/nabu.js"))))))
+	    (:head
+	     (:title (fmt "NABU - ~a" ,title))
+	     (:meta :name "viewport" :content "width=device-width")
+	     (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
+	     (:link :href "/static/css/local.css" :rel "stylesheet"))
+	    (:body
+	     ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
+	      ((:div :class "container")
+	       ((:div :class "navbar-header")
+		({collapse-btn} ".nabu-navbar-collapse")
+		((:a :class "navbar-brand" :href "#") "NABU"))
+	       ,(unless public?
+			`(htm
+			  ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
+			   ((:ul :class "nav navbar-nav")
+			    (nav-links out)))))))
+	     ((:div :class "container")
+	      (:h1 (str ,title))
+	      ,@body
+	      ,@(js-scripts))))))
 
 (defroute "/" ()
   (redirect *response* (if (shell-list *bad-default-shell* "combineds")

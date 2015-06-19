@@ -148,17 +148,10 @@
 	     ({col} 12 2
 	       ({button} ("primary") :ng-click "submit()" "Add")))))))
 
-(defroute "/charts" (&key created removed)
+(defroute "/charts" (&key removed)
   (nabu-page ("Charts")
     (when removed
       (htm ({alert} ("warning" t) "Chart " (str removed) " removed")))
-    (when created
-      (handler-case
-	  (let ((uri (format nil "/chart?OID=~a" (urlencode created)))
-		(name (cmb-name (shell-object *bad-default-shell* "combineds" created))))
-	    ({alert} ("success" t) "Combined chart " (:a :href uri (str name)) " created!"))
-	(error ()
-	  ({alert} ("danger" t) "Error after creation of chart " (:code (str created))))))
     (:form :role "form" :method "GET" :action "/compare"
 	   (map nil (lambda (oid+chart)
 		      (bind (((oid chart) oid+chart))

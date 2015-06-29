@@ -2,6 +2,12 @@ body {
      margin: 4em 2em;
 }
 
+.user-connect {
+     position: fixed;
+     right: 1em;
+     top: 4em;
+}
+
 .ng-move,
 .ng-enter,
 .ng-leave {

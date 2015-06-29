@@ -16,20 +16,18 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-#|
-(defroute "/shell" ()
-  (nabu-page ("Shell")
-    ((:ul :class "list-unstyled")
-     (let@ rec ((object *bad-default-shell*)
-		(path))
-       (let ((path-string (format nil "~:[~;~1:*~{/~a~}~]~a" path (if (shell? object) "/" ""))))
-	 (if (shell? object)
-	     (progn
-	       (htm
-		(:li (:code (str path-string))))
-	       (%map-shell object (lambda (k v)
-				    (rec v (append path (list k))))))
-	     (let ((object-string (format nil "~s" object)))
-	       (htm
-		 (:li (:code (str path-string)) " = " (:code (esc object-string)))))))))))
-|#
+
+
+(defvar *default-nav-links* '(("/units" "Units")
+			      ("/charts" "Charts")
+			      ("/shell" "Shell")))
+
+(defun user-links (uid)
+  (mapcar (lambda (link)
+	    (list (format nil "/usr/~a#~a" uid (first link)) (second link)))
+	  *default-nav-links*))
+
+(defroute "/user/:uid" (&key uid)
+  (let ((*nav-links* (user-links uid)))
+    (nabu-page ("{{title}}")
+      :ng-view)))

@@ -17,6 +17,9 @@
 (in-package :nothos.net/2014.05.nabu)
 
 
+(defvar *root-shell* nil)
+
+
 (defgeneric %get-shell-value (shell key))
 (defgeneric %set-shell-value (shell key value))
 (defgeneric %rm-shell-value (shell key))
@@ -63,6 +66,17 @@
 			      sub
 			      (error 'not-shell :shell shell :path path :c sub))
 			  (%set-shell-value shell key (%make-shell shell)))))))
+
+(defun shell-ensure-hierarchy! (shell hierarchy)
+  (let@ rec ((shell shell)
+	     (hierarchies hierarchy))
+    (when hierarchies
+      (let ((new (caar hierarchies))
+	    (sub (cdar hierarchies))
+	    (rest (cdr hierarchies)))
+	(shell-mksub! shell new)
+	(rec (shell-object shell new) sub)
+	(rec shell rest)))))
 
 (defun shell-remove! (shell &rest path)
   "Remove an entry from a shell"

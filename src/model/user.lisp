@@ -16,20 +16,10 @@
 
 (in-package :nothos.net/2014.05.nabu)
 
-#|
-(defroute "/shell" ()
-  (nabu-page ("Shell")
-    ((:ul :class "list-unstyled")
-     (let@ rec ((object *bad-default-shell*)
-		(path))
-       (let ((path-string (format nil "~:[~;~1:*~{/~a~}~]~a" path (if (shell? object) "/" ""))))
-	 (if (shell? object)
-	     (progn
-	       (htm
-		(:li (:code (str path-string))))
-	       (%map-shell object (lambda (k v)
-				    (rec v (append path (list k))))))
-	     (let ((object-string (format nil "~s" object)))
-	       (htm
-		 (:li (:code (str path-string)) " = " (:code (esc object-string)))))))))))
-|#
+(defun create-user (uid settings)
+  (shell-ensure-hierarchy! *root-shell* `(("users" (,uid ("settings") ("units") ("combineds")))))
+  (dolist (setting settings)
+    (setf (shell-object *root-shell* "users" uid "settings" (first setting)) (second setting))))
+
+(defun create-user* (&key name)
+  (create-user (make-oid) `(("name" ,name))))

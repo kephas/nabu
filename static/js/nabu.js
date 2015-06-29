@@ -1,18 +1,67 @@
-var nabuApp = angular.module('nabuApp', ['ngAnimate', 'nabuAlerts', 'nabuDev'])
+var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngRoute', 'nabuAlerts', 'nabuDev'])
+
+    .config(function($locationProvider, $routeProvider) {
+	$locationProvider.html5Mode(true);//.hashPrefix('!');
+	$routeProvider
+	    .when('/units',
+		  {
+		      templateUrl: '/ng/units',
+		      controller: 'unitsCtrl'
+		  })
+	    .when('/charts',
+		  {
+		      templateUrl: '/ng/charts',
+		      controller: 'chartsCtrl'
+		  })
+	    .when('/compare',
+		  {
+		      templateUrl: '/ng/compare',
+		      controller: 'chartsCompareCtrl'
+		  });
+    })
+
+    .controller('userCtrl', function($scope, ipCookie) {
+	$scope.remembered = false;
+	
+	$scope.check = function() {
+	    if (ipCookie('uid')) {
+		$scope.remembered = true;
+	    }
+	};
+
+	$scope.remember = function() {
+	    ipCookie('uid', $scope.uid, {path: '/'});
+	    $scope.remembered = true;
+	};
+
+	$scope.forget = function() {
+	    ipCookie('uid', false, {path: '/'});
+	    $scope.remembered = false;
+	};
+
+	// if user X is remembered and we go to a private page of user
+	// Y, something's wrong and we forget X by precaution
+	$scope.forgetOther = function() {
+	    if ($scope.uid.length > 0 && ipCookie('uid') != $scope.uid) {
+		$scope.forget();
+	    }
+	};
+    })
 
 /*
   Units
 */
 
-    .controller('unitsCtrl', function($scope, $http, alerts) {
+    .controller('unitsCtrl', function($scope, $rootScope, $http, alerts) {
+	var apiEndpoint = '/api/user/' + $rootScope.uid + '/units';
 	$scope.refresh = function () {
-	    $http.get('/units.json').success(function(data) { $scope.shellList = data; });
+	    $http.get(apiEndpoint).success(function(data) { $scope.shellList = data; });
 	};
 
 	alerts.makeAvailable($scope);
 
 	$scope.submit = function() {
-	    $http.post('/addunit.json', '{}', {params: {"URI": $scope.manifestUri}})
+	    $http.post(apiEndpoint, '{}', {params: {"URI": $scope.manifestUri}})
 		.success(function(data) {
 		    alerts.add(data);
 		    $scope.refresh();

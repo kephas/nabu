@@ -98,12 +98,12 @@
 
 #| Searches not for search engine |#
 
-(defun find-existing-unit (uri)
-  (find uri (shell-list *bad-default-shell* "units")
+(defun find-existing-unit (uid uri)
+  (find uri (shell-list *root-shell* "users" uid "units")
 	:key (lambda (item) (unit-uri (second item))) :test #'string=))
 
-(defun find-unit-charts (unit)
+(defun find-unit-charts (uid unit)
   (mapcan (lambda (entry)
 	    (when (find unit (cmb-units (second entry)))
 	      (list entry)))
-	  (shell-list *bad-default-shell* "combineds")))
+	  (shell-list *root-shell* "users" uid "combineds")))

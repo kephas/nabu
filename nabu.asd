@@ -20,6 +20,7 @@
 			     (:module "model"
 			      :components ((:file "model")
 					   (:file "shell")
+					   (:file "user")
 					   (:file "search")))
 			     (:module "web"
 			      :components ((:file "bootstrap")

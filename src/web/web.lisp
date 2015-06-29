@@ -34,29 +34,21 @@
 			 `(format nil "~a=~a" ,var ,value)))))
 
 
-(defvar *bad-default-shell* nil)
-(defvar *public-shell* nil)
-
-(defmacro ensure-shell (var key)
-  `(let ((shell (ele:get-from-root ,key)))
-     (unless shell
-       (setf shell (ele:make-btree))
-       (ele:add-to-root ,key shell))
-     (setf ,var shell)))
-
 (defun open-storage ()
   (case (config* :storage)
     (:memory
-     (setf *bad-default-shell* (make-hash-table :test 'equal))
-     (setf *public-shell* (make-hash-table :test 'equal)))
+     (setf *root-shell* (make-hash-table :test 'equal)))
     (:elephant
      (ele:open-store (config* :ele-store))
-     (ensure-shell *bad-default-shell* "bad-default-shell")
-     (ensure-shell *public-shell* "public-shell"))))
+     (let ((shell (ele:get-from-root "root-shell")))
+       (unless shell
+	 (setf shell (ele:make-btree))
+	 (ele:add-to-root "root-shell" shell))
+       (setf *root-shell* shell)))))
 
 (eval-when (:compile-toplevel :load-toplevel)
   (defparameter *js-scripts* '("jquery" "bootstrap" "angular" "angular-animate" "angular-aria"
-			       "angular-sanitize"
+			       "angular-sanitize" "angular-route" "angular-cookies" "angular-cookie"
 			       "alerts" "test" "nabu")))
 
 (eval-when (:compile-toplevel :load-toplevel)
@@ -77,7 +69,7 @@
     (with-html-output (out stream)
       (:li (:a :href (first link) (str (second link)))))))
 
-(defmacro nabu-page ((title &key public?) &body body)
+(defmacro nabu-page ((title &key (uid "")) &body body)
   `(with-html-output-to-string (out nil :indent t)
      (:html :ng-app "nabuApp"
 	    (:head
@@ -86,16 +78,22 @@
 	     (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
 	     (:link :href "/static/css/local.css" :rel "stylesheet"))
 	    (:body
+	     ({setf-angular} "uid" ,uid)
 	     ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
 	      ((:div :class "container")
 	       ((:div :class "navbar-header")
 		({collapse-btn} ".nabu-navbar-collapse")
 		((:a :class "navbar-brand" :href "#") "NABU"))
-	       ,(unless public?
-			`(htm
-			  ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
-			   ((:ul :class "nav navbar-nav")
-			    (nav-links out)))))))
+	       ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
+		((:ul :class "nav navbar-nav")
+		 (nav-links out)
+		 (:li
+		  ((:div :class "user-connect" :ng-controller "userCtrl"
+			 :ng-init (format nil "uid=\"~a\";check();forgetOther()" ,uid))
+		   ({button} ("primary")
+		     :ng-hide "remembered || uid.length == 0" :ng-click "remember()" "Remember me!")
+		   ({button} ("primary")
+		     :ng-show "remembered" :ng-click "forget()" "Forget me!")))))))
 	     ((:div :class "container")
 	      (:h1 (str ,title))
 	      ,@body
@@ -273,6 +271,60 @@
 	    ({alert} ("warning") "Chart " (str (cmb-name combined)) " removed."))))
     (combined-404 oid)))
 
+
+#|
+
+User single-page app
+
+|#
+
+(defun user-nav-links (uid)
+  (mapcar (lambda (spec)
+	    (list (format nil (first spec) uid) (second spec)))
+	  '(("/user/~a/units" "Units")
+	    ("/user/~a/charts" "Charts")
+	    ("/user/~a/shell" "Shell"))))
+
+(defroute "/user/:uid/*" (&key uid)
+  (if-let (user (shell-object *root-shell* "users" uid))
+    (let ((base-url (format nil "/user/~a/" uid))
+	  (*nav-links* (user-nav-links uid)))
+      (nabu-page ((if-let (user-name (shell-object user "settings" "name"))
+		    user-name uid) :uid uid)
+	(:base :href base-url)
+	({setf-angular} "uid" uid)
+	(:ng-view :uid uid)))
+    (list 404 nil
+	  (list (let ((*nav-links*))
+		  (nabu-page ("User not found")))))))
+
+(defroute "/ng/units" ()
+  (with-html-output-to-string (out nil :indent t)
+    (:div
+     (:nabu-alerts)
+     (:form :role "form" :method "POST" :action "/units2cmb"
+	    (:div :class "form-group"
+		  ({row} :ng-repeat "item in shellList"
+			 ({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
+		  ({row} :ng-show "shellList.length > 1"
+			 ({col} 12 6
+			   (:div :class "input-group"
+				 (:label :class "input-group-addon" "Chart name:")
+				 (:input :class "form-control" :name "NAME")))
+			 ({col} 4 6
+			   ({submit} ("primary") "Combine units")))))
+     :hr
+     (:h2 "Add unit")
+     ((:form :role "form")
+      ({row}
+	({col} 12 10
+	  (:div :class "input-group"
+		(:label :class "input-group-addon" "URI ")
+		(:input :ng-model "manifestUri" :class "form-control" :type "url" :name "URI")))
+	({col} 12 2
+	  ({button} ("primary") :ng-click "submit()" "Add")))))))
+
+
 #|
 
 Public read-only
@@ -280,25 +332,24 @@ Public read-only
 |#
 
 (defroute "/pub/chart/:oid" (&key oid)
-  (nabu-page ("{{name}}" :public? t)
-    (:div :ng-controller "chartCtrl"
-	  ({setf-angular} "chartOid" oid)
-	  ({setf-angular} "public" "true" nil)
-	  (:span :ng-init "refresh()")
-	  (:table :class "table table-hover"
-		  (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
-		       (:td "{{entry.char}}")
-		       (:td :style "display:flex;align-items:flex-end"
-			    (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active")))))))
+  (let ((*nav-links*))
+    (nabu-page ("{{name}}")
+      (:div :ng-controller "chartCtrl"
+	    ({setf-angular} "chartOid" oid)
+	    ({setf-angular} "public" "true" nil)
+	    (:span :ng-init "refresh()")
+	    (:table :class "table table-hover"
+		    (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
+			 (:td "{{entry.char}}")
+			 (:td :style "display:flex;align-items:flex-end"
+			      (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active"))))))))
 
 
 (defun clackup (port &optional config-file)
   (read-configuration! config-file)
   (open-storage)
-  (shell-mksub! *bad-default-shell* "units")
-  (shell-mksub! *bad-default-shell* "combineds")
-  (shell-mksub! *public-shell* "combineds")
-  (setf drakma:*drakma-default-external-format* :utf8)
+  (shell-ensure-hierarchy! *root-shell* '(("public" ("combineds"))("users")))
+  (setf drakma:*drakma-default-external-format* :UTF-8)
   (clack:clackup
    (clack.builder:builder
     (clack.middleware.static:<clack-middleware-static>

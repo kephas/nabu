@@ -21,18 +21,28 @@
   (princ "false" stream))
 
 
-(defroute "/units.json" ()
-  (if-let (units (shell-list *bad-default-shell* "units"))
-    (encode-json-to-string units)
-    "[]"))
+(defun serve-json (json)
+  `(200
+    (:content-type "application/json; charset=utf-8")
+    (,json)))
 
-(defroute ("/addunit.json" :method :POST) (&key uri)
+(defun serve-json* (object)
+  (serve-json (encode-json-to-string object)))
+
+
+(defroute "/api/user/:uid/units" (&key uid)
+  (serve-json
+   (if-let (units (shell-list *root-shell* "users" uid "units"))
+     (encode-json-to-string units)
+     "[]")))
+
+(defroute ("/api/user/:uid/units" :method :POST) (&key uid uri)
   (labels ((result (success? format &rest arguments)
 	     (encode-json-plist-to-string
 	      (list :type (case success? (:ok "success") (:err "danger"))
 		    :message (apply #'format nil format arguments))))
 	   (oid->name (oid)
-	     (values (unit-name (shell-object *bad-default-shell* "units" oid)) t))
+	     (values (unit-name (shell-object *root-shell* "users" uid "units" oid)) t))
 	   (done (oid ok action)
 	     (handler-case
 		 (result :ok "Unit ~a ~a." (oid->name oid) ok)
@@ -48,26 +58,26 @@
 		(values nil (result :err "Nothing could be created from manifest at <a href='~a'><code>~a</code></a>." uri uri)))))
 	   (unit-oid (make-oid)))
       (flet ((store-new (cmb?)
-	       (setf (shell-object *bad-default-shell* "units" unit-oid) new)
+	       (setf (shell-object *root-shell* "users" uid "units" unit-oid) new)
 	       (if cmb?
-		   (setf (shell-object *bad-default-shell* "combineds" (make-oid))
+		   (setf (shell-object *root-shell* "users" uid "combineds" (make-oid))
 			 (build-combined (unit-name new) (list new))))))
 	(if creation-error
 	    creation-error
-	    (if-let (existing (find-existing-unit uri))
+	    (if-let (existing (find-existing-unit uid uri))
 	      (bind (((old-oid old-unit) existing))
 		(if (string= (unit-manifest old-unit) (unit-manifest new))
 		    (done old-oid "is up-to-date" "update")
 		    (progn
-		      (let@ rec ((entries (find-unit-charts old-unit)))
+		      (let@ rec ((entries (find-unit-charts uid old-unit)))
 			(if entries
 			    (bind ((((cmb-oid cmb) &rest remaining) entries))
-			      (shell-remove! *bad-default-shell* "combineds" cmb-oid)
-			      (setf (shell-object *bad-default-shell* "combineds" (make-oid))
+			      (shell-remove! *root-shell* "users" uid "combineds" cmb-oid)
+			      (setf (shell-object *root-shell* "users" uid "combineds" (make-oid))
 				    (build-combined (cmb-name cmb) (substitute new old-unit (cmb-units cmb))))
 			      (rec remaining))
 			    (progn
-			      (shell-remove! *bad-default-shell* "units" old-oid)
+			      (shell-remove! *root-shell* "users" uid "units" old-oid)
 			      (store-new nil)
 			      (done unit-oid "has been updated" "update")))))))
 	      (progn
@@ -136,14 +146,20 @@
 			    (cmb-ab combined)))))))
        max-baselines))))
 
-(defroute "/chart.json" (&key oid public)
-  (if-let (combined (shell-object (if public *public-shell* *bad-default-shell*) "combineds" oid))
-    (encode-chart-to-json combined oid nil)
+(defroute "/api/user/:uid/charts/:oid" (&key uid oid)
+  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
+    (serve-json (encode-chart-to-json combined oid nil))
     (progn
       (combined-404 oid))))
 
-(defroute ("/chart.json" :method :POST) (&key oid)
-  (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+(defroute "/api/public/charts/:oid" (&key oid)
+  (if-let (combined (shell-object *public-shell* "combineds" oid))
+    (serve-json (encode-chart-to-json combined oid nil))
+    (progn
+      (combined-404 oid))))
+
+(defroute ("/api/user/:uid/charts/:oid" :method :POST) (&key uid oid)
+  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
     (let* ((%alphabet (body-parameter *request* "alphabet"))
 	   (%glyphs (getjso "glyphs" (first %alphabet))))
       (setf (cmb-scale combined) (body-parameter *request* "scale"))
@@ -163,32 +179,31 @@
 		    (rec (first %glyphs) (rest %glyphs) (rest chars) inactives))
 		  (progn
 		    (setf (cmb-inactive combined) inactives)
-		    "{}"))))))
+		    (serve-json "{}")))))))
     (combined-404 oid)))
 
-(defroute ("/pub-chart.json" :method :POST) ()
-  (let ((oid (body-parameter *request* "oid")))
-    (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+(defroute ("/api/user/:uid/charts/:oid/publish" :method :POST) (&key uid oid)
+  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
+    (serve-json
+     (if-let (public-oid (cmb-public combined))
+       (encode-json-plist-to-string (list :public-oid public-oid))
+       (let ((new-oid (make-oid)))
+	 (setf (shell-object *root-shell* "public" "combineds" new-oid) combined
+	       (cmb-public combined) new-oid)
+	 (encode-json-plist-to-string (list :public-oid new-oid)))))
+    (combined-404 oid)))
+
+(defroute ("/api/user/:uid/charts/:oid/publish" :method :POST) (&key uid oid)
+  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
+    (progn
       (if-let (public-oid (cmb-public combined))
-	(encode-json-plist-to-string (list :public-oid public-oid))
-	(let ((new-oid (make-oid)))
-	  (setf (shell-object *public-shell* "combineds" new-oid) combined
-		(cmb-public combined) new-oid)
-	  (encode-json-plist-to-string (list :public-oid new-oid))))
-      (combined-404 oid))))
+	(progn
+	  (setf (cmb-public combined) nil)
+	  (shell-remove! *root-shell* "public" "combineds" public-oid)))
+      (serve-json "{}"))
+    (combined-404 oid)))
 
-(defroute ("/unpub-chart.json" :method :POST) ()
-  (let ((oid (body-parameter *request* "oid")))
-    (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
-      (progn
-	(if-let (public-oid (cmb-public combined))
-	  (progn
-	    (setf (cmb-public combined) nil)
-	    (shell-remove! *public-shell* "combineds" public-oid)))
-	"{}")
-      (combined-404 oid))))
-
-(defroute "/charts.json" (&key _parsed)
+(defroute "/api/user/:uid/comparative-chart" (&key uid _parsed)
   (let ((oids (get-parsed :oids _parsed))
 	(errors nil)
 	(max-baselines (make-hash-table :test 'equal))
@@ -198,7 +213,7 @@
 	(as-object-member ("charts")
 	  (with-array ()
 	    (dolist (oid oids)
-	      (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
+	      (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
 		(bind (((:values chart local-max-baselines) (encode-chart-to-json combined oid t)))
 		  (push combined charts)
 		  (maphash (lambda (char value)

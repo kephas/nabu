@@ -38,8 +38,10 @@
        (setf *root-shell* shell)))))
 
 (defroute "/" ()
-  (redirect *response* (if (shell-list *bad-default-shell* "combineds")
-			   "/charts" "/units")))
+  (let ((*nav-links*))
+    (nabu-page ("Welcome")
+      (:p "Welcome to NABU!")
+      (:p "This is an alpha-test version, you should contact developers to get a user account."))))
 
 (defparameter +s-filter+ "S-FILTER")
 

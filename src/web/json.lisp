@@ -198,17 +198,7 @@
 	 (setf (shell-object *root-shell* "public" "combineds" new-oid) combined
 	       (cmb-public combined) new-oid)
 	 (encode-json-plist-to-string (list :public-oid new-oid)))))
-    (combined-404 oid)))
-
-(defroute ("/api/user/:uid/charts/:oid/publish" :method :POST) (&key uid oid)
-  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
-    (progn
-      (if-let (public-oid (cmb-public combined))
-	(progn
-	  (setf (cmb-public combined) nil)
-	  (shell-remove! *root-shell* "public" "combineds" public-oid)))
-      (serve-json "{}"))
-    (combined-404 oid)))
+    (serve-json "{}" :status 404)))
 
 (defroute "/api/user/:uid/comparative-chart" (&key uid _parsed)
   (let ((oids (get-parsed :oids _parsed))

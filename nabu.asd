@@ -24,6 +24,7 @@
 					   (:file "search")))
 			     (:module "web"
 			      :components ((:file "bootstrap")
+					   (:file "page")
 					   (:file "web")
 					   (:file "json")
 					   (:file "shell")))

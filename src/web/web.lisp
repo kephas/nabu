@@ -25,15 +25,6 @@
   (cdr (assoc name parsed :test #'string=)))
 
 
-(defmacro {setf-angular} (var value &optional (string? t))
-  "Create an element that will set a variable in AngularJS"
-  `(htm
-    (:span :style "display:none"
-	   :ng-init ,(if string?
-			 `(format nil "~a=\"~a\"" ,var ,value)
-			 `(format nil "~a=~a" ,var ,value)))))
-
-
 (defun open-storage ()
   (case (config* :storage)
     (:memory
@@ -45,59 +36,6 @@
 	 (setf shell (ele:make-btree))
 	 (ele:add-to-root "root-shell" shell))
        (setf *root-shell* shell)))))
-
-(eval-when (:compile-toplevel :load-toplevel)
-  (defparameter *js-scripts* '("jquery" "bootstrap" "angular" "angular-animate" "angular-aria"
-			       "angular-sanitize" "angular-route" "angular-cookies" "angular-cookie"
-			       "alerts" "test" "nabu")))
-
-(eval-when (:compile-toplevel :load-toplevel)
-  (defun js-scripts ()
-    (let@ rec ((scripts (reverse *js-scripts*))
-	       (markup))
-      (if scripts
-	  (rec (rest scripts)
-	       (cons (list :script :src (format nil "/static/js/~a.js" (first scripts))) markup))
-	  markup))))
-
-(defvar *nav-links* '(("/units" "Units")
-		      ("/charts" "Charts")
-		      ("/shell" "Shell")))
-
-(defun nav-links (stream)
-  (dolist (link *nav-links*)
-    (with-html-output (out stream)
-      (:li (:a :href (first link) (str (second link)))))))
-
-(defmacro nabu-page ((title &key (uid "")) &body body)
-  `(with-html-output-to-string (out nil :indent t)
-     (:html :ng-app "nabuApp"
-	    (:head
-	     (:title (fmt "NABU - ~a" ,title))
-	     (:meta :name "viewport" :content "width=device-width")
-	     (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
-	     (:link :href "/static/css/local.css" :rel "stylesheet"))
-	    (:body
-	     ({setf-angular} "uid" ,uid)
-	     ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
-	      ((:div :class "container")
-	       ((:div :class "navbar-header")
-		({collapse-btn} ".nabu-navbar-collapse")
-		((:a :class "navbar-brand" :href "#") "NABU"))
-	       ((:div :class "collapse navbar-collapse nabu-navbar-collapse")
-		((:ul :class "nav navbar-nav")
-		 (nav-links out)
-		 (:li
-		  ((:div :class "user-connect" :ng-controller "userCtrl"
-			 :ng-init (format nil "uid=\"~a\";check();forgetOther()" ,uid))
-		   ({button} ("primary")
-		     :ng-hide "remembered || uid.length == 0" :ng-click "remember()" "Remember me!")
-		   ({button} ("primary")
-		     :ng-show "remembered" :ng-click "forget()" "Forget me!")))))))
-	     ((:div :class "container")
-	      (:h1 (str ,title))
-	      ,@body
-	      ,@(js-scripts))))))
 
 (defroute "/" ()
   (redirect *response* (if (shell-list *bad-default-shell* "combineds")

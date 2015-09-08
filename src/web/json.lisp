@@ -152,7 +152,8 @@
        (with-output-to-string (*json-output*)
 	 (with-array ()
 	   (dolist (entry (shell-list *root-shell* "users" uid "combineds"))
-	     (as-array-member () (encode-chart-to-json (second entry) (first entry)))))))
+	     (as-array-member () (write (encode-chart-to-json (second entry) (first entry))
+					:stream *json-output* :escape nil))))))
     (not-shell () (serve-json '{}' :status 404))))
 
 (defroute "/api/user/:uid/charts/:oid" (&key uid oid)

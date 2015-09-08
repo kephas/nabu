@@ -87,43 +87,6 @@
      (htm (:img :data-toggle "tooltip" :data-placement "right"
 		:title pos :src uri))))
 
-(defroute "/chart" (&key oid)
-  (nabu-page ("{{name}}")
-    (:div :ng-controller "chartCtrl"
-	  ({setf-angular} "chartOid" oid)
-	  (:span :ng-init "refresh()")
-	  ({row} ({active} ("warning") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit") " "
-		 ({active} ("danger") (format nil "/rm-chart?OID=~a" (urlencode oid)) "Remove"))
-	  :hr
-	  (:table :class "table table-hover"
-		  (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
-		       (:td "{{entry.char}}")
-		       (:td :style "display:flex;align-items:flex-end"
-			    (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active")))))))
-
-(defroute "/edit-chart" (&key oid)
-  (nabu-page ("{{name}}")
-    (:div :ng-controller "chartEditCtrl"
-	  ({setf-angular} "chartOid" oid)
-	  (:span :ng-init "refresh()")
-	  (:nabu-alerts)
-	  ({row} ({active} ("info") (format nil "/chart?OID=~a" (urlencode oid)) "View") " "
-		 ({button} ("warning") :ng-click "submit()" "Save modifications")
-		 ({button} ("warning") :ng-hide "chart.publicOid" :ng-click "publish()" "Make public")
-		 (:span :ng-show "chart.publicOid"
-			({button} ("warning") :ng-click "unpublish()" "Remove public view")
-			({active} ("info" :ng t) "/pub/chart/{{chart.publicOid}}" "Public URL")))
-	  :hr
-	  ({button} ("warning") :ng-hide "scaling" :ng-click "activateScaling()" "Scale images")
-	  (:div :class "input-group" :ng-show "scaling"
-		(:label :class "input-group-addon" "Scale ")
-		(:input :type "number" :ng-model "chart.scale"))
-	  :hr
-	  (:table :class "table table-hover"
-		  (:tr :ng-repeat "entry in chart.alphabet"
-		       (:td "{{entry.char}}")
-		       (:td (:nabu-glyph-edit :ng-repeat "glyph in entry.glyphs")))))))
-
 (defun oids->query (param oids)
   (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))
 

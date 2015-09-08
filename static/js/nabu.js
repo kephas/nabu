@@ -1,22 +1,37 @@
-var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngRoute', 'nabuAlerts', 'nabuDev'])
+var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 'ngRoute', 'nabuAlerts', 'nabuDev'])
 
     .config(function($locationProvider, $routeProvider) {
 	$locationProvider.html5Mode(true);//.hashPrefix('!');
 	$routeProvider
-	    .when('/units',
+	    .when('/user/:uid/units',
 		  {
 		      templateUrl: '/ng/units',
 		      controller: 'unitsCtrl'
 		  })
-	    .when('/charts',
+	    .when('/user/:uid/charts',
 		  {
 		      templateUrl: '/ng/charts',
 		      controller: 'chartsCtrl'
 		  })
-	    .when('/compare',
+	    .when('/user/:uid/chart',
+		  {
+		      templateUrl: '/ng/chart',
+		      controller: 'chartCtrl'
+		  })
+	    .when('/user/:uid/edit-chart',
+		  {
+		      templateUrl: '/ng/edit-chart',
+		      controller: 'chartEditCtrl'
+		  })
+	    .when('/user/:uid/compare',
 		  {
 		      templateUrl: '/ng/compare',
 		      controller: 'chartsCompareCtrl'
+		  })
+	    .when('/pub/chart/:oid',
+		  {
+		      templateUrl: '/ng/chart',
+		      controller: 'chartCtrl'
 		  });
     })
 
@@ -74,22 +89,30 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngRoute', 'na
 	$scope.refresh();
     })
 
+/*
+  Charts
+*/
+
+    .controller('chartsCtrl', function($scope, $rootScope, $resource) {
+	var Charts;
+
+	$scope.initialize = function() {
+	    Charts = $resource('/api/user/' + $rootScope.uid + '/charts');
+	    $scope.charts = Charts.query();
+	};
+    })
 
 /*
   Chart view
 */
 
-    .controller('chartCtrl', function($scope, $rootScope, $http) {
-	$scope.refresh = function() {
-	    $http.get('/chart.json', {params: {"OID": $scope.chartOid, "PUBLIC": $scope.public}})
-		.success(function(data) {
-		    $scope.chart = data;
-		    $rootScope.name = $scope.chart.name;
-		})
-		.error(function() {
-		    $rootScope.name = "Chart not found";
-		});
-	};
+    .controller('chartCtrl', function($scope, $resource, $routeParams) {
+	if ( $routeParams.uid ) {
+	    $scope.chart = $resource('/api/user/:uid/charts/:oid', $routeParams).get();
+	} else {
+	    $scope.chart = $resource('/api/public/charts/' + $scope.chartOid).get();
+	}
+	$scope.uid = $routeParams.uid;
 
 	$scope.glyphCssDimensions = function(chart, glyph) {
 	    if (chart.scale == 100) {
@@ -112,20 +135,16 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngRoute', 'na
   Chart edition
 */
 
-    .controller('chartEditCtrl', function($scope, $rootScope, $http, alerts) {
-	$scope.refresh = function() {
-	    $http.get('/chart.json', {params: {"OID": $scope.chartOid}})
-		.success(function(data) {
-		    $scope.chart = data;
-		    $rootScope.name = $scope.chart.name;
-		    if (data.scale != 100) {
-			$scope.scaling = true;
-		    }
-		})
-		.error(function() {
-		    $rootScope.name = "Chart not found";
-		});
-	};
+    .controller('chartEditCtrl', function($scope, $http, $resource, $routeParams, alerts) {
+	var Chart = $resource('/api/user/:uid/charts/:oid', $routeParams);
+	$scope.chart_res = Chart;
+
+	$scope.chart = Chart.get(function() {
+	    if ($scope.chart.scale != 100) {
+		$scope.scaling = true;
+	    }
+	});
+	$scope.uid = $routeParams.uid;
 
 	alerts.makeAvailable($scope);
 
@@ -162,17 +181,16 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngRoute', 'na
 	};
 
 	$scope.submit = function() {
-	    $http.post('/chart.json', $scope.chart, {params: {"OID": $scope.chartOid}})
-		.success(function() {
-		    alerts.add({type: "success", message: "Modifications saved."});
-		})
-		.error(function() {
-		    alerts.add({type: "danger", message: "An error occurred while trying to save modifications."});
-		});
+	    Chart.save({}, $scope.chart, function() {
+		alerts.add({type: "success", message: "Modifications saved."});
+	    }, function() {
+		alerts.add({type: "danger", message: "An error occurred while trying to save modifications."});
+	    });
 	};
 
 	$scope.publish = function() {
-	    $http.post('/pub-chart.json', {oid: $scope.chart.oid})
+	    $http.post('/api/user/' + $routeParams.uid +
+		       '/charts/' + $routeParams.oid + '/publish')
 		.success(function(data) {
 		    $scope.chart.publicOid = data.publicOid;
 		});

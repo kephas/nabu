@@ -57,59 +57,6 @@
 	(do-search query oid+units :key #'second))
     (error ())))
 
-(defroute "/units" ()
-  (nabu-page ("Units")
-    (if-let (current-filter (filtering?))
-      (htm (:p "Current filter:"
-	       (:code (esc current-filter))
-	       ({active} ("success" :size "sm") "/units" "View all units")))
-      (htm (:form :role "form" :method "GET" :action "/units"
-		  ({row}
-		    (:div (:label "Add filter:")))
-		  ({row}
-		    ({col} 8 10 (:input :class "form-control" :type "text" :name "S-FILTER"))
-		    ({col} 4 2 ({submit} ("default") "Filter"))))))
-    (:hr)
-    (:div :ng-controller "unitsCtrl"
-	  (:nabu-alerts)
-	  (:form :role "form" :method "POST" :action "/units2cmb"
-		 (:div :class "form-group"
-		       ({row} :ng-repeat "item in shellList"
-			      ({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
-		       ({row} :ng-show "shellList.length > 1"
-			 ({col} 12 6
-			   (:div :class "input-group"
-				 (:label :class "input-group-addon" "Chart name:")
-				 (:input :class "form-control" :name "NAME")))
-			 ({col} 4 6
-			   ({submit} ("primary") "Combine units")))))
-	  (:hr)
-	  (:h2 "Add unit")
-	  ((:form :role "form")
-	   ({row}
-	     ({col} 12 10
-	       (:div :class "input-group"
-		     (:label :class "input-group-addon" "URI ")
-		     (:input :ng-model "manifestUri" :class "form-control" :type "url" :name "URI")))
-	     ({col} 12 2
-	       ({button} ("primary") :ng-click "submit()" "Add")))))))
-
-(defroute "/charts" (&key removed)
-  (nabu-page ("Charts")
-    (when removed
-      (htm ({alert} ("warning" t) "Chart " (str removed) " removed")))
-    (:form :role "form" :method "GET" :action "/compare"
-	   (map nil (lambda (oid+chart)
-		      (bind (((oid chart) oid+chart))
-			({col} 12 12
-			  ({checkbox} "OIDS[]" oid
-			    ({active} ("default" :size "lg") (format nil "/chart?OID=~a" (urlencode oid)) (str (cmb-name chart)))
-			    " " ({active} ("warning" :size "sm") (format nil "/edit-chart?OID=~a" (urlencode oid)) "Edit")
-			    " " ({active} ("danger" :size "sm") (format nil "/rm-chart?OID=~a&REDIRECT=t" (urlencode oid)) :disabled "disabled" "Remove")))))
-		(remove-used-unit-charts (shell-list *bad-default-shell* "combineds") :key #'second))
-	   (when (shell-list *bad-default-shell* "combineds")
-	     (htm ({submit} ("primary") "Compare charts"))))))
-
 
 (defroute ("/units2cmb" :method :POST) (&key name _parsed)
   (let ((combined (build-combined name
@@ -225,43 +172,85 @@ User single-page app
 
 (defroute "/user/:uid/*" (&key uid)
   (if-let (user (shell-object *root-shell* "users" uid))
-    (let ((base-url (format nil "/user/~a/" uid))
-	  (*nav-links* (user-nav-links uid)))
+    (let ((*nav-links* (user-nav-links uid)))
       (nabu-page ((if-let (user-name (shell-object user "settings" "name"))
 		    user-name uid) :uid uid)
-	(:base :href base-url)
-	({setf-angular} "uid" uid)
-	(:ng-view :uid uid)))
+	(:base :href "/")
+       	(:ng-view)))
     (list 404 nil
 	  (list (let ((*nav-links*))
 		  (nabu-page ("User not found")))))))
 
 (defroute "/ng/units" ()
   (with-html-output-to-string (out nil :indent t)
-    (:div
-     (:nabu-alerts)
-     (:form :role "form" :method "POST" :action "/units2cmb"
-	    (:div :class "form-group"
-		  ({row} :ng-repeat "item in shellList"
-			 ({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
-		  ({row} :ng-show "shellList.length > 1"
-			 ({col} 12 6
-			   (:div :class "input-group"
-				 (:label :class "input-group-addon" "Chart name:")
-				 (:input :class "form-control" :name "NAME")))
-			 ({col} 4 6
-			   ({submit} ("primary") "Combine units")))))
-     :hr
-     (:h2 "Add unit")
-     ((:form :role "form")
-      ({row}
-	({col} 12 10
-	  (:div :class "input-group"
-		(:label :class "input-group-addon" "URI ")
-		(:input :ng-model "manifestUri" :class "form-control" :type "url" :name "URI")))
-	({col} 12 2
-	  ({button} ("primary") :ng-click "submit()" "Add")))))))
+    (:h2 "Units")
+    (:nabu-alerts)
+    (:form :role "form" :method "POST" :action "/units2cmb"
+	   (:div :class "form-group"
+		 ({row} :ng-repeat "item in shellList"
+			({col} 12 12 ({checkbox} "UNITS[]" "{{item[0]}}" "{{item[1].name}}")))
+		 ({row} :ng-show "shellList.length > 1"
+			({col} 12 6
+			  (:div :class "input-group"
+				(:label :class "input-group-addon" "Chart name:")
+				(:input :class "form-control" :name "NAME")))
+			({col} 4 6
+			  ({submit} ("primary") "Combine units")))))
+    :hr
+    (:h3 "Add unit")
+    ((:form :role "form")
+     ({row}
+       ({col} 12 10
+	 (:div :class "input-group"
+	       (:label :class "input-group-addon" "URI ")
+	       (:input :ng-model "manifestUri" :class "form-control" :type "url" :name "URI")))
+       ({col} 12 2
+	 ({button} ("primary") :ng-click "submit()" "Add"))))))
 
+(defroute "/ng/charts" ()
+  (with-html-output-to-string (out nil :indent t)
+    (:h2 "Charts")
+    (:span :ng-init "initialize()")
+    (:form :role "form" :method "GET" :action "/compare"
+	   ({col} 12 12 :ng-repeat "chart in charts"
+		  ({checkbox} "OIDS[]" "{{chart.oid}}"
+		    ({active} ("default" :size "lg" :ng t) "/user/{{uid}}/chart?oid={{chart.oid}}" "{{chart.name}}") " "
+		    ({active} ("warning" :size "sm" :ng t) "/user/{{uid}}/edit-chart?oid={{chart.oid}}" "Edit") " "
+		    ({active} ("danger" :size "sm" :ng t) "/user/{{uid}}/rm-chart?oid={{chart.oid}}&REDIRECT=t" :disabled "disabled" "Remove")))
+	   ({submit} ("primary") :ng-show "charts.length > 1" "Compare charts"))))
+
+(defroute "/ng/chart" ()
+  (with-html-output-to-string (out nil :indent t)
+    (:h2 "{{chart.name}}")
+    ({row} ({active} ("warning" :ng t) "/user/{{uid}}/edit-chart?oid={{chart.oid}}" "Edit") " "
+	   ({active} ("danger") "/user/{{uid}}/rm-chart?oid={{chart.oid}}" "Remove"))
+    :hr
+    (:table :class "table table-hover"
+	    (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
+		 (:td "{{entry.char}}")
+		 (:td :style "display:flex;align-items:flex-end"
+		      (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active"))))))
+
+(defroute "/ng/edit-chart" ()
+  (with-html-output-to-string (out nil :indent t)
+    (:span :ng-init "refresh()")
+    (:nabu-alerts)
+    ({row} ({active} ("info" :ng t) "/user/{{uid}}/chart?oid={{chart.oid}}" "View") " "
+	   ({button} ("warning") :ng-click "submit()" "Save modifications")
+	   ({button} ("warning") :ng-hide "chart.publicOid" :ng-click "publish()" "Make public")
+	   (:span :ng-show "chart.publicOid"
+		  ({button} ("warning") :ng-click "unpublish()" "Remove public view")
+		  ({active} ("info" :ng t) "/pub/chart/{{chart.publicOid}}" "Public URL")))
+    :hr
+    ({button} ("warning") :ng-hide "scaling" :ng-click "activateScaling()" "Scale images")
+    (:div :class "input-group" :ng-show "scaling"
+	  (:label :class "input-group-addon" "Scale ")
+	  (:input :type "number" :ng-model "chart.scale"))
+    :hr
+    (:table :class "table table-hover"
+	    (:tr :ng-repeat "entry in chart.alphabet"
+		 (:td "{{entry.char}}")
+		 (:td (:nabu-glyph-edit :ng-repeat "glyph in entry.glyphs"))))))
 
 #|
 
@@ -269,18 +258,10 @@ Public read-only
 
 |#
 
-(defroute "/pub/chart/:oid" (&key oid)
+(defroute "/pub/chart/*" ()
   (let ((*nav-links*))
-    (nabu-page ("{{name}}")
-      (:div :ng-controller "chartCtrl"
-	    ({setf-angular} "chartOid" oid)
-	    ({setf-angular} "public" "true" nil)
-	    (:span :ng-init "refresh()")
-	    (:table :class "table table-hover"
-		    (:tr :ng-repeat "entry in chart.alphabet" :ng-hide "entry.inactive"
-			 (:td "{{entry.char}}")
-			 (:td :style "display:flex;align-items:flex-end"
-			      (:nabu-glyph :ng-repeat "glyph in entry.glyphs" :ng-show "glyph.active"))))))))
+    (nabu-page ("")
+      (:ng-view))))
 
 
 (defun clackup (port &optional config-file)

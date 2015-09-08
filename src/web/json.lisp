@@ -21,8 +21,8 @@
   (princ "false" stream))
 
 
-(defun serve-json (json)
-  `(200
+(defun serve-json (json &key (status 200))
+  `(,status
     (:content-type "application/json; charset=utf-8")
     (,json)))
 
@@ -84,7 +84,7 @@
 		(store-new t)
 		(done unit-oid "has been created" "creation"))))))))
 
-(defun encode-chart-to-json (combined oid ab/obj?)
+(defun encode-chart-to-json (combined oid &optional ab/obj?)
   (let ((max-baselines (make-hash-table :test 'equal)))
     (labels ((glyphs-list (glyphs)
 	       (let ((max-baseline 0)
@@ -146,17 +146,24 @@
 			    (cmb-ab combined)))))))
        max-baselines))))
 
+(defroute "/api/user/:uid/charts" (&key uid)
+  (handler-case
+      (serve-json
+       (with-output-to-string (*json-output*)
+	 (with-array ()
+	   (dolist (entry (shell-list *root-shell* "users" uid "combineds"))
+	     (as-array-member () (encode-chart-to-json (second entry) (first entry)))))))
+    (not-shell () (serve-json '{}' :status 404))))
+
 (defroute "/api/user/:uid/charts/:oid" (&key uid oid)
   (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
-    (serve-json (encode-chart-to-json combined oid nil))
-    (progn
-      (combined-404 oid))))
+    (serve-json (encode-chart-to-json combined oid))
+    (serve-json '{}' :status 404)))
 
 (defroute "/api/public/charts/:oid" (&key oid)
-  (if-let (combined (shell-object *public-shell* "combineds" oid))
-    (serve-json (encode-chart-to-json combined oid nil))
-    (progn
-      (combined-404 oid))))
+  (if-let (combined (shell-object *root-shell* "public" "combineds" oid))
+    (serve-json (encode-chart-to-json combined oid))
+    (serve-json '{}' :status 404)))
 
 (defroute ("/api/user/:uid/charts/:oid" :method :POST) (&key uid oid)
   (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))

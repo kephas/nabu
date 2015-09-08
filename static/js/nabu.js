@@ -110,7 +110,7 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 	if ( $routeParams.uid ) {
 	    $scope.chart = $resource('/api/user/:uid/charts/:oid', $routeParams).get();
 	} else {
-	    $scope.chart = $resource('/api/public/charts/' + $scope.chartOid).get();
+	    $scope.chart = $resource('/api/public/charts/:oid', $routeParams).get();
 	}
 	$scope.uid = $routeParams.uid;
 

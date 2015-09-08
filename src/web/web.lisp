@@ -226,6 +226,7 @@ Public read-only
 (defroute "/pub/chart/*" ()
   (let ((*nav-links*))
     (nabu-page ("")
+      (:base :href "/")
       (:ng-view))))
 
 

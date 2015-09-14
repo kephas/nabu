@@ -139,7 +139,7 @@ User single-page app
   (if-let (user (shell-object *root-shell* "users" uid))
     (let ((*nav-links* (user-nav-links uid)))
       (nabu-page ((if-let (user-name (shell-object user "settings" "name"))
-		    user-name uid) :uid uid)
+		    user-name uid))
 	(:base :href "/")
        	(:ng-view)))
     (list 404 nil

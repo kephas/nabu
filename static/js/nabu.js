@@ -35,17 +35,23 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 		  });
     })
 
-    .controller('userCtrl', function($scope, ipCookie) {
+    .controller('userCtrl', function($scope, $routeParams, ipCookie) {
 	$scope.remembered = false;
 	
-	$scope.check = function() {
+	$scope.$on('$routeChangeSuccess', function() {
 	    if (ipCookie('uid')) {
 		$scope.remembered = true;
 	    }
-	};
+
+	    // if user X is remembered and we go to a private page of user
+	    // Y, something's wrong and we forget X by precaution
+	    if ($routeParams.uid.length > 0 && ipCookie('uid') != $routeParams.uid) {
+		$scope.forget();
+	    }
+	});
 
 	$scope.remember = function() {
-	    ipCookie('uid', $scope.uid, {path: '/'});
+	    ipCookie('uid', $routeParams.uid, {path: '/'});
 	    $scope.remembered = true;
 	};
 
@@ -53,24 +59,18 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 	    ipCookie('uid', false, {path: '/'});
 	    $scope.remembered = false;
 	};
-
-	// if user X is remembered and we go to a private page of user
-	// Y, something's wrong and we forget X by precaution
-	$scope.forgetOther = function() {
-	    if ($scope.uid.length > 0 && ipCookie('uid') != $scope.uid) {
-		$scope.forget();
-	    }
-	};
     })
 
 /*
   Units
 */
 
-    .controller('unitsCtrl', function($scope, $rootScope, $http, alerts) {
-	var apiEndpoint = '/api/user/' + $rootScope.uid + '/units';
+    .controller('unitsCtrl', function($scope, $resource, $routeParams, alerts) {
+	var apiEndpoint = '/api/user/' + $routeParams.uid + '/units';
+	var Units = $resource('/api/user/:uid/units', $routeParams);
+
 	$scope.refresh = function () {
-	    $http.get(apiEndpoint).success(function(data) { $scope.shellList = data; });
+	    $scope.shellList = Units.query();
 	};
 
 	alerts.makeAvailable($scope);
@@ -93,11 +93,11 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
   Charts
 */
 
-    .controller('chartsCtrl', function($scope, $rootScope, $resource) {
+    .controller('chartsCtrl', function($scope, $resource, $routeParams) {
 	var Charts;
 
 	$scope.initialize = function() {
-	    Charts = $resource('/api/user/' + $rootScope.uid + '/charts');
+	    Charts = $resource('/api/user/:uid/charts', $routeParams);
 	    $scope.charts = Charts.query();
 	};
     })

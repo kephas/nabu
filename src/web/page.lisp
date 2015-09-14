@@ -48,7 +48,7 @@
     (with-html-output (out stream)
       (:li (:a :href (first link) (str (second link)))))))
 
-(defmacro nabu-page ((title &key (uid "")) &body body)
+(defmacro nabu-page ((title) &body body)
   `(with-html-output-to-string (out nil :indent t)
      (:html :ng-app "nabuApp"
 	    (:head
@@ -57,7 +57,6 @@
 	     (:link :href "/static/css/bootstrap.min.css" :rel "stylesheet")
 	     (:link :href "/static/css/local.css" :rel "stylesheet"))
 	    (:body
-	     ({setf-angular} "uid" ,uid)
 	     ((:div :class "navbar navbar-inverse navbar-fixed-top" :role "navigation")
 
 	      ((:div :class "container")
@@ -68,10 +67,9 @@
 		((:ul :class "nav navbar-nav")
 		 (nav-links out)
 		 (:li
-		  ((:div :class "user-connect" :ng-controller "userCtrl"
-			 :ng-init (format nil "uid=\"~a\";check();forgetOther()" ,uid))
+		  ((:div :class "user-connect" :ng-controller "userCtrl")
 		   ({button} ("primary")
-		     :ng-hide "remembered || uid.length == 0" :ng-click "remember()" "Remember me!")
+		     :ng-hide "remembered" :ng-click "remember()" "Remember me!")
 		   ({button} ("primary")
 		     :ng-show "remembered" :ng-click "forget()" "Forget me!")))))))
 	     ((:div :class "container")

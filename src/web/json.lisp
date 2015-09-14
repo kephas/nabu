@@ -156,18 +156,31 @@
 					:stream *json-output* :escape nil))))))
     (not-shell () (serve-json '{}' :status 404))))
 
+(defmacro with-json-error (&body body)
+  `(handler-case
+       (progn ,@body)
+     (error (e)
+       (declare (ignore e))
+       (serve-json "{}" :status 501))))
+
+(defmacro if-user-chart (chart uid oid &body body)
+  `(with-json-error
+     (if-let (,chart (shell-object *root-shell* "users" ,uid "combineds" ,oid))
+       (progn ,@body)
+       (serve-json "{}" :status 404))))
+
 (defroute "/api/user/:uid/charts/:oid" (&key uid oid)
-  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
-    (serve-json (encode-chart-to-json combined oid))
-    (serve-json '{}' :status 404)))
+  (if-user-chart combined uid oid
+    (serve-json (encode-chart-to-json combined oid))))
 
 (defroute "/api/public/charts/:oid" (&key oid)
-  (if-let (combined (shell-object *root-shell* "public" "combineds" oid))
-    (serve-json (encode-chart-to-json combined oid))
-    (serve-json '{}' :status 404)))
+  (with-json-error
+    (if-let (combined (shell-object *root-shell* "public" "combineds" oid))
+      (serve-json (encode-chart-to-json combined oid))
+      (serve-json "{}" :status 404))))
 
 (defroute ("/api/user/:uid/charts/:oid" :method :POST) (&key uid oid)
-  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
+  (if-user-chart combined uid oid
     (let* ((%alphabet (body-parameter *request* "alphabet"))
 	   (%glyphs (getjso "glyphs" (first %alphabet))))
       (setf (cmb-scale combined) (body-parameter *request* "scale"))
@@ -187,19 +200,17 @@
 		    (rec (first %glyphs) (rest %glyphs) (rest chars) inactives))
 		  (progn
 		    (setf (cmb-inactive combined) inactives)
-		    (serve-json "{}")))))))
-    (combined-404 oid)))
+		    (serve-json "{}")))))))))
 
 (defroute ("/api/user/:uid/charts/:oid/publish" :method :POST) (&key uid oid)
-  (if-let (combined (shell-object *root-shell* "users" uid "combineds" oid))
+  (if-user-chart combined uid oid
     (serve-json
      (if-let (public-oid (cmb-public combined))
        (encode-json-plist-to-string (list :public-oid public-oid))
        (let ((new-oid (make-oid)))
 	 (setf (shell-object *root-shell* "public" "combineds" new-oid) combined
 	       (cmb-public combined) new-oid)
-	 (encode-json-plist-to-string (list :public-oid new-oid)))))
-    (serve-json "{}" :status 404)))
+	 (encode-json-plist-to-string (list :public-oid new-oid)))))))
 
 (defroute "/api/user/:uid/comparative-chart" (&key uid _parsed)
   (let ((oids (get-parsed :oids _parsed))

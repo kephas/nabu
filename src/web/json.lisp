@@ -212,6 +212,13 @@
 	       (cmb-public combined) new-oid)
 	 (encode-json-plist-to-string (list :public-oid new-oid)))))))
 
+(defroute ("/api/user/:uid/charts/:oid" :method :DELETE) (&key uid oid)
+  (if-user-chart combined uid oid
+    (progn
+      (if-let (public-oid (cmb-public combined))
+	(shell-remove! *root-shell* "public" "combineds" public-oid))
+      (shell-remove! *root-shell* "users" uid "combineds" oid))))
+
 (defroute "/api/user/:uid/comparative-chart" (&key uid _parsed)
   (let ((oids (get-parsed :oids _parsed))
 	(errors nil)

@@ -100,6 +100,9 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 	    Charts = $resource('/api/user/:uid/charts', $routeParams);
 	    $scope.charts = Charts.query();
 	};
+
+	$scope.uid = $routeParams.uid;
+	$scope.action = "/user/" + $routeParams.uid + "/compare";
     })
 
 /*
@@ -247,16 +250,11 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 	};
     })
 
-    .controller('chartCompareCtrl', function($scope, $http, $timeout, alerts) {
-	$scope.download = function() {
-	    $http.get('/charts.json?' + $scope.oidsParams)
-		.success(function(data) {
-		    $scope.comparison = data;
-		})
-		.error(function() {
-		    alerts.add({type: "danger", message: "An error occurred while trying to retrieve the charts."});
-		});
-	};
+    .controller('chartsCompareCtrl', function($scope, $resource, $routeParams, $location, $timeout, alerts) {
+	$scope.comparison = $resource("/api/user/:uid/comparative-chart", $routeParams)
+	    .get($location.search(), function(){}, function() {
+		alerts.add({type: "danger", message: "An error occurred while trying to retrieve the charts."});
+	    });
 
 	$scope.move = function(index, shift) {
 	    var removed = $scope.comparison.charts.splice(index, 1);

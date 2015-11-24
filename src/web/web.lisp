@@ -90,26 +90,7 @@
 (defun oids->query (param oids)
   (format nil "~{~a=~a&~}" (mapcan (lambda (oid) (list param (urlencode oid))) oids)))
 
-(defroute "/compare" (&key _parsed)
-  (let ((oids (get-parsed :oids _parsed)))
-    (nabu-page ("Comparative chart")
-      (:div :ng-controller "chartCompareCtrl"
-	    ({setf-angular} "oidsParams" (with-output-to-string (out)
-					   (dolist (oid oids)
-					     (format out "OIDS[]=~a&" (urlencode oid)))))
-	    (:span :ng-init "download()")
-	    (:chart-reorder :ng-repeat "chart in comparison.charts")
-	    :hr
-	    ((:table :class "table table-hover table-bordered")
-	     (:thead
-	      (:tr
-	       (:th "")
-	       (:th :ng-repeat "chart in comparison.charts" "{{chart.name}}"))
-	      (:tr :ng-repeat "char in comparison.chars"
-		   :ng-init "entry={maxBaselineOffset: comparison.maxBaselineOffsets[char]}"
-		   (:td "{{char}}")
-		   (:td :ng-repeat "chart in comparison.charts"
-			(:nabu-glyph :ng-repeat "glyph in chart.alphabet[char].glyphs")))))))))
+
 
 (defroute "/rm-chart" (&key oid redirect)
   (if-let (combined (shell-object *bad-default-shell* "combineds" oid))
@@ -176,7 +157,7 @@ User single-page app
   (with-html-output-to-string (out nil :indent t)
     (:h2 "Charts")
     (:span :ng-init "initialize()")
-    (:form :role "form" :method "GET" :action "/compare"
+    (:form :role "form" :method "GET" :action "{{action}}" ;"/user/{{uid}}/compare" ;=> pb with $sce
 	   ({col} 12 12 :ng-repeat "chart in charts"
 		  ({checkbox} "OIDS[]" "{{chart.oid}}"
 		    ({active} ("default" :size "lg" :ng t) "/user/{{uid}}/chart?oid={{chart.oid}}" "{{chart.name}}") " "
@@ -216,6 +197,24 @@ User single-page app
 	    (:tr :ng-repeat "entry in chart.alphabet"
 		 (:td "{{entry.char}}")
 		 (:td (:nabu-glyph-edit :ng-repeat "glyph in entry.glyphs"))))))
+
+(defroute "/ng/compare" ()
+  (with-html-output-to-string (out nil :indent t)
+    (:nabu-alerts)
+    (:h2 "Comparative chart")
+    (:div
+     (:chart-reorder :ng-repeat "chart in comparison.charts")
+     :hr
+     ((:table :class "table table-hover table-bordered")
+      (:thead
+       (:tr
+	(:th "")
+	(:th :ng-repeat "chart in comparison.charts" "{{chart.name}}"))
+       (:tr :ng-repeat "char in comparison.chars"
+	    :ng-init "entry={maxBaselineOffset: comparison.maxBaselineOffsets[char]}"
+	    (:td "{{char}}")
+	    (:td :ng-repeat "chart in comparison.charts"
+		 (:nabu-glyph :ng-repeat "glyph in chart.alphabet[char].glyphs"))))))))
 
 #|
 

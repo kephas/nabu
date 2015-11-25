@@ -241,3 +241,14 @@
 	(encode-object-member "maxBaselineOffsets" max-baselines)
 	(encode-object-member "chars" (ab-union charts))
 	(encode-object-member "errors" errors)))))
+
+(defroute "/api/user/:uid/setup" (&key uid)
+  (with-json-error
+    (serve-json
+     (encode-json-plist-to-string
+      (list :name (shell-object *root-shell* "users" uid "settings" "name"))))))
+
+(defroute ("/api/user/:uid/setup" :method :POST) (&key uid)
+  (with-json-error
+    (let ((%name (body-parameter *request* "name")))
+      (setf (shell-object *root-shell* "users" uid "settings" "name") %name))))

@@ -114,7 +114,7 @@ User single-page app
 	    (list (format nil (first spec) uid) (second spec)))
 	  '(("/user/~a/units" "Units")
 	    ("/user/~a/charts" "Charts")
-	    ("/user/~a/shell" "Shell"))))
+	    ("/user/~a/setup" "Setup"))))
 
 (defroute "/user/:uid/*" (&key uid)
   (if-let (user (shell-object *root-shell* "users" uid))
@@ -215,6 +215,17 @@ User single-page app
 	    (:td "{{char}}")
 	    (:td :ng-repeat "chart in comparison.charts"
 		 (:nabu-glyph :ng-repeat "glyph in chart.alphabet[char].glyphs"))))))))
+
+(defroute "/ng/setup" ()
+  (with-html-output-to-string (out nil :indent t)
+    (:nabu-alerts)
+    (:h2 "Session setup")
+    (:form :role "form"
+	   ({row} (:div :class "input-group"
+			(:label :class "input-group-addon" "Name ")
+			(:input :type "text" :ng-model "setup.name")))
+	   ({row} (:div :class "input-group"
+			({button} ("primary") :ng-click "save()" "Save"))))))
 
 #|
 

@@ -28,6 +28,11 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 		      templateUrl: '/ng/compare',
 		      controller: 'chartsCompareCtrl'
 		  })
+	    .when('/user/:uid/setup',
+		  {
+		      templateUrl: '/ng/setup',
+		      controller: 'setupCtrl'
+		  })
 	    .when('/pub/chart/:oid',
 		  {
 		      templateUrl: '/ng/chart',
@@ -268,5 +273,20 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
 	return {
 	    restrict: 'E',
 	    templateUrl: '/static/ng/chart-reorder.html'
+	};
+    })
+
+    .controller('setupCtrl', function($scope, $resource, $routeParams, alerts) {
+	var Setup = $resource('/api/user/:uid/setup', $routeParams);
+	$scope.setup = Setup.get();
+
+	alerts.makeAvailable($scope);
+
+	$scope.save = function() {
+	    Setup.save({}, $scope.setup, function() {
+		alerts.add({type: "success", message: "Modifications saved."});
+	    }, function() {
+		alerts.add({type: "danger", message: "An error occurred while trying to save modifications."});
+	    });
 	};
     });

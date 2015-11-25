@@ -146,22 +146,20 @@
 			    (cmb-ab combined)))))))
        max-baselines))))
 
-(defroute "/api/user/:uid/charts" (&key uid)
-  (handler-case
-      (serve-json
-       (with-output-to-string (*json-output*)
-	 (with-array ()
-	   (dolist (entry (shell-list *root-shell* "users" uid "combineds"))
-	     (as-array-member () (write (encode-chart-to-json (second entry) (first entry))
-					:stream *json-output* :escape nil))))))
-    (not-shell () (serve-json '{}' :status 404))))
-
 (defmacro with-json-error (&body body)
   `(handler-case
        (progn ,@body)
-     (error (e)
-       (declare (ignore e))
-       (serve-json "{}" :status 501))))
+     (not-shell () (serve-json "{}" :status 404))
+     (error () (serve-json "{}" :status 501))))
+
+(defroute "/api/user/:uid/charts" (&key uid)
+  (with-json-error
+    (serve-json
+     (with-output-to-string (*json-output*)
+       (with-array ()
+	 (dolist (entry (shell-list *root-shell* "users" uid "combineds"))
+	   (as-array-member () (write (encode-chart-to-json (second entry) (first entry))
+				      :stream *json-output* :escape nil))))))))
 
 (defmacro if-user-chart (chart uid oid &body body)
   `(with-json-error

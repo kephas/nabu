@@ -70,7 +70,7 @@ var nabuApp = angular.module('nabuApp', ['ngAnimate', 'ipCookie', 'ngResource', 
   Units
 */
 
-    .controller('unitsCtrl', function($scope, $resource, $routeParams, alerts) {
+    .controller('unitsCtrl', function($scope, $http, $resource, $routeParams, alerts) {
 	var apiEndpoint = '/api/user/' + $routeParams.uid + '/units';
 	var Units = $resource('/api/user/:uid/units', $routeParams);
 

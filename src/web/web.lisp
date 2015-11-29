@@ -127,8 +127,14 @@ User single-page app
 	  (list (let ((*nav-links*))
 		  (nabu-page ("User not found")))))))
 
+(defmacro with-cachable-html ((var &key (max-age (seconds :days 1))) &body body)
+  `(list
+    200
+    (list :cache-control (format nil "public, max-age=~a" ,max-age))
+    (list (with-html-output-to-string (,var nil :indent t) ,@body))))
+
 (defroute "/ng/units" ()
-  (with-html-output-to-string (out nil :indent t)
+  (with-cachable-html (out)
     (:h2 "Units")
     (:nabu-alerts)
     (:form :role "form" :method "POST" :action "/units2cmb"

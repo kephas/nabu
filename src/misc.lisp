@@ -108,3 +108,6 @@
 (defun puri->string (puri)
   (with-output-to-string (out)
     (puri:render-uri puri out)))
+
+(defun seconds (&key (days 0) (hours 0) (minutes 0) seconds)
+  (+ (* days 86400) (* hours 3600) (* minutes 60) seconds))

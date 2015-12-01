@@ -1,0 +1,25 @@
+From 98e074de756d424182988ccd4947f32d3b2cf563 Mon Sep 17 00:00:00 2001
+From: Pierre Thierry <pierre@nothos.net>
+Date: Tue, 24 Nov 2015 17:58:09 +0100
+Subject: [PATCH] Correct parsed arguments handling
+
+---
+ v2/src/nested-parameter.lisp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/v2/src/nested-parameter.lisp b/v2/src/nested-parameter.lisp
+index 04d6a60..5600f7e 100644
+--- a/v2/src/nested-parameter.lisp
++++ b/v2/src/nested-parameter.lisp
+@@ -8,6 +8,8 @@
+   (let ((params (make-hash-table :test 'equal)))
+     (labels ((process (key val)
+                (declare (optimize speed))
++	       (if (symbolp key)
++		   (setf key (symbol-name key)))
+                (let ((keys (if (char= (aref key (1- (length key))) #\])
+                                (parse-key key)
+                                (list key))))
+-- 
+2.1.4
+

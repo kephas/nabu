@@ -25,6 +25,8 @@ RUN sbcl --eval '(ql:register-local-projects)' \
 RUN sbcl --eval '(ql:quickload (list "cl-match" "cl-base64" "uuid" "do-urlencode"))'
 
 COPY ./ /root/quicklisp/local-projects/nabu/
+RUN cd /root/quicklisp/dists/quicklisp/software/caveman-20150113-git && \
+    patch -p1 -i /root/quicklisp/local-projects/nabu/patches/0001-Correct-parsed-arguments-handling.patch
 RUN sbcl --eval '(ql:register-local-projects)' --eval '(ql:quickload "nabu")' # Pre-compile the project
 
 CMD sbcl --eval '(ql:quickload (list "cl-docker-tools" "nabu"))' --eval "(in-package :nabu)" \

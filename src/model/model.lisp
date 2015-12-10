@@ -37,6 +37,12 @@
   ((metadata :initarg :meta :accessor nabu-metadata))
   (:default-initargs :meta (make-hash-table :test 'equal)))
 
+(defmethod nabu-metadatum ((object w/metadata) field)
+  (gethash field (nabu-metadata object)))
+
+(defmethod (setf nabu-metadatum) (new-value (object w/metadata) field)
+  (setf (gethash field (nabu-metadata object)) new-value))
+
 
 (defclass unit (w/metadata)
   ((name :initarg :name :reader unit-name)

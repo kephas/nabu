@@ -43,6 +43,20 @@
 (defmethod (setf nabu-metadatum) (new-value (object w/metadata) field)
   (setf (gethash field (nabu-metadata object)) new-value))
 
+; sometimes, metadata are meant to go into object slots in some way
+(defgeneric update-from-metadata! (object))
+
+(defun setf-slot-from-metadatum! (object slot field)
+  (setf (slot-value object slot) (nabu-metadatum object field)))
+
+(defun setf-slots-from-metadata! (object &rest slot-and-fields)
+  (assert (zerop (rem (length slot-and-fields) 2)))
+  (let@ rec ((slot (first slot-and-fields))
+	     (field (second slot-and-fields))
+	     (rest (cddr slot-and-fields)))
+    (setf-slot-from-metadatum! object slot field)
+    (if rest (rec (first rest) (second rest) (cddr rest)))))
+
 
 (defclass unit (w/metadata)
   ((name :initarg :name :reader unit-name)
@@ -62,6 +76,12 @@
    (id :initarg :id :reader glyph-id)
    (baseline :initarg :bl :accessor glyph-bl))
   (:default-initargs :id (make-oid) :bl 0 :height 0 :width 0))
+
+(defmethod update-from-metadata! ((object glyph))
+  (setf-slots-from-metadata! object
+			     'baseline "nabu:bl"
+			     'height "exif:height"
+			     'width "exif:width"))
 
 (define-alternate-maker make-glyph glyph)
 
@@ -143,9 +163,11 @@
 			:pos (parse-glyph-pos (third spec))
 			:meta (alist->hash (fourth spec)))
 		       glyphs))
-	    (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
-		       :manifest manifest
-		       :meta (alist->hash (second description))))))))
+	    (dolist (glyph glyphs
+		     (make-unit :name (first description) :glyphs (reverse glyphs) :uri uri
+				:manifest manifest
+				:meta (alist->hash (second description))))
+	      (update-from-metadata! glyph)))))))
 
 (defun http-manifest->object (uri)
   (manifest->object uri (drakma:http-request uri)))

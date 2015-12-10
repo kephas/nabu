@@ -1,0 +1,3 @@
+It might be nice to avoid discrepancies between the metadata hash
+table and the object slots by having them constantly linked. This may
+need a metaclass or just a hook into a GF in slot-value's path.

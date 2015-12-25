@@ -150,7 +150,10 @@
   `(handler-case
        (progn ,@body)
      (not-shell () (serve-json "{}" :status 404))
-     (error () (serve-json "{}" :status 501))))
+     (error (e)
+       (if (config* :debug)
+	   (error e)
+	   (serve-json "{}" :status 500)))))
 
 (defroute "/api/user/:uid/charts" (&key uid)
   (with-json-error
